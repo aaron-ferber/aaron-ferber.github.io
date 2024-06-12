@@ -2,24 +2,31 @@
 layout: about
 title: about
 permalink: /
-subtitle: <a href='#'>Affiliations</a>. Address. Contacts. Moto. Etc.
+subtitle: <p>data ⇄ decisions ⇆ deployment</p> <p><strong>AI for Science</strong> @ Cornell, <strong>Co-Organizer</strong> @ <a href="https://www.latinxinai.org/">LXAI</a> </p> <p><strong>Previously</strong> <a href="https://www.cais.usc.edu/">USC CAIS</a> / Meta AI / NEC Labs / Microsoft </p>
+
 
 profile:
   align: right
-  image: prof_pic.jpg
-  image_circular: false # crops the image to make it circular
+  image: prof_pic.png
+  image_circular: true # crops the image to make it circular
   more_info: >
-    <p>555 your office number</p>
-    <p>123 your address street</p>
-    <p>Your City, State 12345</p>
+    <center><p>Postdoc</p></center>
+    <center><p>Cornell University</p></center>
+    <center><p>Bowers CIS</p></center>
+    <hr>
+    <center><p>Technical Instructor</p></center>
+    <center><p><a href="https://science.ai.cornell.edu/">CU AI for Science Institute</a></p></center>
 
-news: true # includes a list of news items
+
+news: false # includes a list of news items
 selected_papers: true # includes a list of papers marked as "selected={true}"
 social: true # includes social icons at the bottom of the page
 ---
 
-Write your biography here. Tell the world about yourself. Link to your favorite [subreddit](http://reddit.com). You can put a picture in, too. The code is already in, just name your picture `prof_pic.jpg` and put it in the `img/` folder.
+I'm Aaron Ferber, a researcher, engineer, and community builder bridging the gaps between AI, science, and society. I'm currently a postdoc at Cornell University working with Carla Gomes in the [CU AI for Science Institute](https://science.ai.cornell.edu/).
 
-Put your address / P.O. box / other info right below your picture. You can also disable any of these elements by editing `profile` property of the YAML header of your `_pages/about.md`. Edit `_bibliography/papers.bib` and Jekyll will render your [publications page](/al-folio/publications/) automatically.
+I'm passionate about solving impactful real-world problems with elegant and efficient solutions. My research experience focuses on end-to-end integration of deep learning and automated reasoning, with applications in several domains such as wildlife trafficking, invasive species management, neuroscience, photonic design, recommendation systems, finance, and more. 
 
-Link to your social media connections, too. This theme is set up to use [Font Awesome icons](https://fontawesome.com/) and [Academicons](https://jpswalsh.github.io/academicons/), like the ones below. Add your Facebook, Twitter, LinkedIn, Google Scholar, or just disable all of them.
+I received my PhD from the University of Southern California, advised by Prof. [Bistra Dilkina](https://viterbi.usc.edu/directory/faculty/Dilkina/Bistra), working in the [Center for AI in Society (CAIS)](https://www.cais.usc.edu/), with a disseration titled ["Artificial Decision Intelligence: Integrating Deep Learning and Combinatorial Optimization"](https://digitallibrary.usc.edu/Share/4x43xxm5iqop28mjh0qu8u5003403033).
+
+Outside of research I enjoy raquet sports, climbing, cooking, sailing, diving, and pretty much anything outdoors. I'm always looking for new things in research and recreation so reach out and let's do something!
