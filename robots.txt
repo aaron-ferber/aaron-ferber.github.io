@@ -1,4 +1,4 @@
 User-agent: *
 Disallow:
 
-Sitemap: https://www.cs.cornell.edu/~aaronferber//sitemap.xml
+Sitemap: https://aaron-ferber.github.io/sitemap.xml
