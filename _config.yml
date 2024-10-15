@@ -19,7 +19,7 @@ icon: favicon.ico
 # icon: ⚛️ # the emoji used as the favicon (alternatively, provide image name in /assets/img/)
 
 # url: https://www.cs.cornell.edu # the base hostname & protocol for your site
-# baseurl: /~aaronferber/  # the subpath of your site, e.g. /blog/. Leave blank for root
+# baseurl: /~aaronferber/ # the subpath of your site, e.g. /blog/. Leave blank for root
 url: https://aaron-ferber.github.io # the base hostname & protocol for your site
 baseurl:   # the subpath of your site, e.g. /blog/. Leave blank for root
 last_updated: false # set to true if you want to display last updated in the footer
@@ -365,7 +365,7 @@ filtered_bibtex_keywords:
   ]
 
 # Maximum number of authors to be shown for each publication (more authors are visible on click)
-max_author_limit:  # leave blank to always show all authors default 3
+max_author_limit: # leave blank to always show all authors default 3
 more_authors_animation_delay: 10 # more authors are revealed on click using animation; smaller delay means faster animation
 
 # Enables publication thumbnails. If disabled, none of the publications will display thumbnails, even if specified in the bib entry.

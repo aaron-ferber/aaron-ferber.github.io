@@ -1,44 +1,44 @@
 "Submission":
-    color: "#FF69B4"
+  color: "#FF69B4"
 "IISE":
-    color: "#FF5733"
-    url: https://www.iise.org/
+  color: "#FF5733"
+  url: https://www.iise.org/
 "NeurIPS":
-    color: "#8E44AD"
-    url: https://neurips.cc/
+  color: "#8E44AD"
+  url: https://neurips.cc/
 "ESA":
-    color: "#2980B9"
-    url: https://algo-conference.org/esa/
+  color: "#2980B9"
+  url: https://algo-conference.org/esa/
 "OR":
-    color: "#27AE60"
-    url: https://link.springer.com/journal/12351
+  color: "#27AE60"
+  url: https://link.springer.com/journal/12351
 "CPAIOR":
-    color: "#F1C40F"
-    url: https://cpaior.org/
+  color: "#F1C40F"
+  url: https://cpaior.org/
 "Omega":
-    color: "#E74C3C"
-    url: https://www.sciencedirect.com/journal/omega
+  color: "#E74C3C"
+  url: https://www.sciencedirect.com/journal/omega
 "INFORMS":
-    color: "#1ABC9C"
-    url: https://www.informs.org/
+  color: "#1ABC9C"
+  url: https://www.informs.org/
 "PNAS":
-    color: "#3498DB"
-    url: https://www.pnas.org/
+  color: "#3498DB"
+  url: https://www.pnas.org/
 "Big Earth Data":
-    color: "#16A085"
-    url: https://www.tandfonline.com/journals/tbed20
+  color: "#16A085"
+  url: https://www.tandfonline.com/journals/tbed20
 "Zenodo":
-    color: "#2ECC71"
-    url: https://zenodo.org/
+  color: "#2ECC71"
+  url: https://zenodo.org/
 "arXiv":
-    color: "#34495E"
-    url: https://arxiv.org/
+  color: "#34495E"
+  url: https://arxiv.org/
 "ICML":
-    color: "#9B59B6"
-    url: https://icml.cc/
+  color: "#9B59B6"
+  url: https://icml.cc/
 "AAAI":
-    color: "#E67E22"
-    url: https://www.aaai.org/
+  color: "#E67E22"
+  url: https://www.aaai.org/
 "CP":
-    color: "#F39C12"
-    url: https://www.a4cp.org/events/cp-conference-series
+  color: "#F39C12"
+  url: https://www.a4cp.org/events/cp-conference-series
