@@ -2,6 +2,7 @@
 // -------------------------
 
 .#{$fa-css-prefix} {
+<<<<<<< HEAD
   font-family: var(--#{$fa-css-prefix}-style-family, "#{$fa-style-family}");
   font-weight: var(--#{$fa-css-prefix}-style, #{$fa-style});
 }
@@ -15,6 +16,21 @@
 .#{$fa-css-prefix}-regular,
 .fab,
 .#{$fa-css-prefix}-brands {
+=======
+  font-family: var(--#{$fa-css-prefix}-style-family, '#{$fa-style-family}');
+  font-weight: var(--#{$fa-css-prefix}-style, #{$fa-style});
+}
+
+.#{$fa-css-prefix}-solid,
+.#{$fa-css-prefix}-regular,
+.#{$fa-css-prefix}-brands,
+.fas,
+.far,
+.fab,
+.#{$fa-css-prefix}-sharp-solid,
+.#{$fa-css-prefix}-classic,
+.#{$fa-css-prefix} {
+>>>>>>> template/master
   -moz-osx-font-smoothing: grayscale;
   -webkit-font-smoothing: antialiased;
   display: var(--#{$fa-css-prefix}-display, #{$fa-display});
@@ -29,14 +45,25 @@
 .#{$fa-css-prefix}-solid,
 .far,
 .#{$fa-css-prefix}-regular {
+<<<<<<< HEAD
   font-family: "Font Awesome 6 Free";
+=======
+  font-family: 'Font Awesome 6 Free';
+>>>>>>> template/master
 }
 
 .fab,
 .#{$fa-css-prefix}-brands {
+<<<<<<< HEAD
   font-family: "Font Awesome 6 Brands";
 }
 
+=======
+  font-family: 'Font Awesome 6 Brands';
+}
+
+
+>>>>>>> template/master
 %fa-icon {
   @include fa-icon;
 }

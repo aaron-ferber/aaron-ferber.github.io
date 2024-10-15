@@ -6,6 +6,7 @@
   margin-left: var(--#{$fa-css-prefix}-li-margin, #{$fa-li-margin});
   padding-left: 0;
 
+<<<<<<< HEAD
   > li {
     position: relative;
   }
@@ -13,6 +14,13 @@
 
 .#{$fa-css-prefix}-li {
   left: calc(var(--#{$fa-css-prefix}-li-width, #{$fa-li-width}) * -1);
+=======
+  > li { position: relative; }
+}
+
+.#{$fa-css-prefix}-li {
+  left: calc(-1 * var(--#{$fa-css-prefix}-li-width, #{$fa-li-width}));
+>>>>>>> template/master
   position: absolute;
   text-align: center;
   width: var(--#{$fa-css-prefix}-li-width, #{$fa-li-width});

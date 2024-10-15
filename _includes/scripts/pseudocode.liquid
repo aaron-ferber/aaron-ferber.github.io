@@ -30,7 +30,11 @@
     crossorigin="anonymous"
   ></script>
   <script>
+<<<<<<< HEAD
     document.onreadystatechange = () => {
+=======
+    document.addEventListener('readystatechange', () => {
+>>>>>>> template/master
       if (document.readyState === 'complete') {
         document.querySelectorAll('pre>code.language-pseudocode').forEach((elem) => {
           const texData = elem.textContent;
@@ -47,6 +51,10 @@
           pseudocode.renderElement(pseudoCodeElement);
         });
       }
+<<<<<<< HEAD
     };
+=======
+    });
+>>>>>>> template/master
   </script>
 {% endif %}

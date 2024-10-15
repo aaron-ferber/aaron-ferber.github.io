@@ -59,7 +59,11 @@ layout: default
     <!-- Selected papers -->
     {% if page.selected_papers %}
       <h2>
+<<<<<<< HEAD
         <a href="{{ '/publications/' | relative_url }}" style="color: inherit">Publications</a>
+=======
+        <a href="{{ '/publications/' | relative_url }}" style="color: inherit">selected publications</a>
+>>>>>>> template/master
       </h2>
       {% include selected_papers.liquid %}
     {% endif %}
@@ -72,5 +76,12 @@ layout: default
         <div class="contact-note">{{ site.contact_note }}</div>
       </div>
     {% endif %}
+<<<<<<< HEAD
+=======
+
+    {% if site.newsletter.enabled and site.footer_fixed %}
+      {% include scripts/newsletter.liquid center=true %}
+    {% endif %}
+>>>>>>> template/master
   </article>
 </div>

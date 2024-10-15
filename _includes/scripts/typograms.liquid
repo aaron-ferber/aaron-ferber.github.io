@@ -4,7 +4,11 @@
   <script>
     /* Create typogram as another node and hide the code block, appending the typogram node after it
        this is done to enable retrieving the code again when changing theme between light/dark */
+<<<<<<< HEAD
     document.onreadystatechange = () => {
+=======
+    document.addEventListener('readystatechange', () => {
+>>>>>>> template/master
       if (document.readyState === 'complete') {
         document.querySelectorAll('pre>code.language-typograms').forEach((elem) => {
           const texData = elem.textContent;
@@ -18,6 +22,10 @@
           parent.removeChild(elem.parentElement);
         });
       }
+<<<<<<< HEAD
     };
+=======
+    });
+>>>>>>> template/master
   </script>
 {% endif %}

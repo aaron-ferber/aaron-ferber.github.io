@@ -6,7 +6,11 @@
   ></script>
   <script>
     /* Create leaflet map as another node and hide the code block, appending the leaflet node after it */
+<<<<<<< HEAD
     document.onreadystatechange = () => {
+=======
+    document.addEventListener('readystatechange', () => {
+>>>>>>> template/master
       if (document.readyState === 'complete') {
         document.querySelectorAll('pre>code.language-geojson').forEach((elem) => {
           const jsonData = elem.textContent;
@@ -26,6 +30,10 @@
           map.fitBounds(geoJSON.getBounds());
         });
       }
+<<<<<<< HEAD
     };
+=======
+    });
+>>>>>>> template/master
   </script>
 {% endif %}
