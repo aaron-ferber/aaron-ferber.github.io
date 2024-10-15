@@ -73,14 +73,14 @@ og_image: prof_pic.png # The site-wide (default for all links) Open Graph previe
 # Social integration
 # -----------------------------------------------------------------------------
 
-acm_id: https://dl.acm.org/profile/99658723784/publications?Role=author # your dl.acm.org/profile/id
+acm_id: 99658723784/publications?Role=author # your dl.acm.org/profile/id
 blogger_url: # your blogger URL
 bluesky_url: # your bluesky URL
 dblp_url: https://dblp.org/pid/163/7788.html # your DBLP profile url
 discord_id: # your discord id (18-digit unique numerical identifier)
 facebook_id: # your facebook id
 flickr_id: # your flickr id
-github_username: https://github.com/amf272 # your GitHub user name
+github_username: amf272 # your GitHub user name
 gitlab_username: # your GitLab user name
 ieee_id: # your ieeexplore.ieee.org/author/id
 instagram_id: # your instagram id
@@ -88,10 +88,10 @@ kaggle_id: # your kaggle id
 keybase_username: # your keybase user name
 lastfm_id: # your lastfm id
 lattes_id: # your ID on Lattes (Brazilian Lattes CV)
-linkedin_username: https://www.linkedin.com/in/aaron-ferber-64a73980/ # your LinkedIn user name
+linkedin_username: aaron-ferber-64a73980 # your LinkedIn user name
 mastodon_username: # your mastodon instance+username in the format instance.tld/@username
 medium_username: # your Medium username
-orcid_id: https://orcid.org/0000-0002-7422-0044 # your ORCID ID
+orcid_id: /0000-0002-7422-0044 # your ORCID ID
 osf_id: # your OSF ID
 pinterest_id: # your pinterest id
 publons_id: # your ID on Publons
