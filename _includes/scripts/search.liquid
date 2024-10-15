@@ -2,17 +2,10 @@
   <script type="module" src="{{ '/assets/js/search/ninja-keys.min.js' | relative_url | bust_file_cache }}"></script>
   <ninja-keys hideBreadcrumbs noAutoLoadMdIcons placeholder="Type to start searching"></ninja-keys>
   <script>
-<<<<<<< HEAD
-    let theme = determineComputedTheme();
-    const ninjaKeys = document.querySelector('ninja-keys');
-
-    if (theme === 'dark') {
-=======
     let searchTheme = determineComputedTheme();
     const ninjaKeys = document.querySelector('ninja-keys');
 
     if (searchTheme === 'dark') {
->>>>>>> template/master
       ninjaKeys.classList.add('dark');
     } else {
       ninjaKeys.classList.remove('dark');
@@ -34,19 +27,11 @@
     // add the home and posts menu items
     ninja.data = [
       {%- for page in site.pages -%}
-<<<<<<< HEAD
-        {%- if page.permalink == '/' -%}{%- assign about_title = page.title -%}{%- endif -%}
-      {%- endfor -%}
-      {
-        id: "nav-{{ about_title | slugify }}",
-        title: "{{ about_title }}",
-=======
         {%- if page.permalink == '/' -%}{%- assign about_title = page.title | strip -%}{%- endif -%}
       {%- endfor -%}
       {
         id: "nav-{{ about_title | slugify }}",
         title: "{{ about_title | truncatewords: 13 }}",
->>>>>>> template/master
         section: "Navigation",
         handler: () => {
           window.location.href = "{{ '/' | relative_url }}";
@@ -59,19 +44,11 @@
             {%- for child in p.children -%}
               {%- unless child.title == 'divider' -%}
                 {
-<<<<<<< HEAD
-                  {%- assign title = child.title | escape -%}
-                  {%- if child.permalink contains "/blog/" -%}{%- assign url = "/blog/" -%} {%- else -%}{%- assign url = child.url -%}{%- endif -%}
-                  id: "dropdown-{{ title | slugify }}",
-                  title: "{{ title }}",
-                  description: "{{ child.description | strip_html | strip_newlines | escape }}",
-=======
                   {%- assign title = child.title | escape | strip -%}
                   {%- if child.permalink contains "/blog/" -%}{%- assign url = "/blog/" -%} {%- else -%}{%- assign url = child.url -%}{%- endif -%}
                   id: "dropdown-{{ title | slugify }}",
                   title: "{{ title | truncatewords: 13 }}",
                   description: "{{ child.description | strip_html | strip_newlines | escape | strip }}",
->>>>>>> template/master
                   section: "Dropdown",
                   handler: () => {
                     window.location.href = "{{ url | relative_url }}";
@@ -82,19 +59,11 @@
 
           {%- else -%}
             {
-<<<<<<< HEAD
-              {%- assign title = p.title | escape -%}
-              {%- if p.permalink contains "/blog/" -%}{%- assign url = "/blog/" -%} {%- else -%}{%- assign url = p.url -%}{%- endif -%}
-              id: "nav-{{ title | slugify }}",
-              title: "{{ title }}",
-              description: "{{ p.description | strip_html | strip_newlines | escape }}",
-=======
               {%- assign title = p.title | escape | strip -%}
               {%- if p.permalink contains "/blog/" -%}{%- assign url = "/blog/" -%} {%- else -%}{%- assign url = p.url -%}{%- endif -%}
               id: "nav-{{ title | slugify }}",
               title: "{{ title | truncatewords: 13 }}",
               description: "{{ p.description | strip_html | strip_newlines | escape | strip }}",
->>>>>>> template/master
               section: "Navigation",
               handler: () => {
                 window.location.href = "{{ url | relative_url }}";
@@ -105,20 +74,6 @@
       {%- endfor -%}
       {%- for post in site.posts -%}
         {
-<<<<<<< HEAD
-          {%- assign title = post.title | escape -%}
-          id: "post-{{ title | slugify }}",
-          {% if post.redirect == blank %}
-            title: "{{ title }}",
-          {% elsif post.redirect contains '://' %}
-            // TODO: fix the svg icon position for external posts
-            // title: '{{ title }} <svg width="2rem" height="2rem" top=".5rem" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg"><path d="M17 13.5v6H5v-12h6m3-3h6v6m0-6-9 9" class="icon_svg-stroke" stroke="#999" stroke-width="1.5" fill="none" fill-rule="evenodd" stroke-linecap="round" stroke-linejoin="round"></path></svg>',
-            title: "{{ title }}",
-          {% else %}
-            title: "{{ title }}",
-          {% endif %}
-          description: "{{ post.description | strip_html | strip_newlines | escape }}",
-=======
           {%- assign title = post.title | escape | strip -%}
           id: "post-{{ title | slugify }}",
           {% if post.redirect == blank %}
@@ -129,7 +84,6 @@
             title: "{{ title | truncatewords: 13 }}",
           {% endif %}
           description: "{{ post.description | strip_html | strip_newlines | escape | strip }}",
->>>>>>> template/master
           section: "Posts",
           handler: () => {
             {% if post.redirect == blank %}
@@ -142,39 +96,6 @@
           },
         },
       {%- endfor -%}
-<<<<<<< HEAD
-      {%- assign news = site.news | reverse -%}
-      {%- for item in news -%}
-        {
-          {%- if item.inline -%}
-            {%- assign title = item.content | remove: '<p>' | remove: '</p>' | escape | strip -%}
-          {%- else -%}
-            {%- assign title = item.title | escape -%}
-          {%- endif -%}
-          id: "news-{{ title | slugify }}",
-          title: '{{ title | emojify }}',
-          description: "{{ item.description | strip_html | strip_newlines | escape }}",
-          section: "News",
-          {%- unless item.inline -%}
-            handler: () => {
-              window.location.href = "{{ item.url | relative_url }}";
-            },
-          {%- endunless -%}
-        },
-      {%- endfor -%}
-      {%- for collection in site.collections -%}
-        {%- if collection.label != 'news' and collection.label != 'posts' -%}
-          {%- for item in collection.docs -%}
-            {
-              {%- if item.inline -%}
-                {%- assign title = item.content | remove: '<p>' | remove: '</p>' | escape | strip -%}
-              {%- else -%}
-                {%- assign title = item.title | escape -%}
-              {%- endif -%}
-              id: "{{ collection.label }}-{{ title | slugify }}",
-              title: '{{ title | emojify }}',
-              description: "{{ item.description | strip_html | strip_newlines | escape }}",
-=======
       {%- for collection in site.collections -%}
         {%- if collection.label != 'posts' -%}
           {%- for item in collection.docs -%}
@@ -187,7 +108,6 @@
               id: "{{ collection.label }}-{{ title | slugify }}",
               title: '{{ title | emojify | truncatewords: 13 }}',
               description: "{{ item.description | strip_html | strip_newlines | escape | strip }}",
->>>>>>> template/master
               section: "{{ collection.label | capitalize }}",
               {%- unless item.inline -%}
                 handler: () => {
@@ -655,8 +575,5 @@
       {%- endif -%}
     ];
   </script>
-<<<<<<< HEAD
-=======
   <script src="{{ '/assets/js/shortcut-key.js' | relative_url | bust_file_cache }}"></script>
->>>>>>> template/master
 {% endif %}

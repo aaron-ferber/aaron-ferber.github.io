@@ -14,19 +14,11 @@
     ></script>
   {% endif %}
   <script>
-<<<<<<< HEAD
-    let theme = determineComputedTheme();
-
-    /* Create mermaid diagram as another node and hide the code block, appending the mermaid node after it
-       this is done to enable retrieving the code again when changing theme between light/dark */
-    document.onreadystatechange = () => {
-=======
     let mermaidTheme = determineComputedTheme();
 
     /* Create mermaid diagram as another node and hide the code block, appending the mermaid node after it
        this is done to enable retrieving the code again when changing theme between light/dark */
     document.addEventListener('readystatechange', () => {
->>>>>>> template/master
       if (document.readyState === 'complete') {
         document.querySelectorAll('pre>code.language-mermaid').forEach((elem) => {
           const svgCode = elem.textContent;
@@ -40,11 +32,7 @@
           backup.after(mermaid);
         });
 
-<<<<<<< HEAD
-        mermaid.initialize({ theme: theme });
-=======
         mermaid.initialize({ theme: mermaidTheme });
->>>>>>> template/master
 
         /* Zoomable mermaid diagrams */
         if (typeof d3 !== 'undefined') {
@@ -62,10 +50,6 @@
           });
         }
       }
-<<<<<<< HEAD
-    };
-=======
     });
->>>>>>> template/master
   </script>
 {% endif %}

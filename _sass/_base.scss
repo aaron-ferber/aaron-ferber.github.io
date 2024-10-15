@@ -27,10 +27,7 @@ table {
   td,
   th {
     font-size: 1rem;
-<<<<<<< HEAD
-=======
     padding: 1px 1rem 1px 0;
->>>>>>> template/master
   }
 
   th {
@@ -75,14 +72,10 @@ blockquote {
     border-color: var(--global-tip-block);
     background-color: var(--global-tip-block-bg);
 
-<<<<<<< HEAD
-    p {
-=======
     em,
     li,
     p,
     strong {
->>>>>>> template/master
       color: var(--global-tip-block-text);
     }
 
@@ -100,14 +93,10 @@ blockquote {
     border-color: var(--global-warning-block);
     background-color: var(--global-warning-block-bg);
 
-<<<<<<< HEAD
-    p {
-=======
     em,
     li,
     p,
     strong {
->>>>>>> template/master
       color: var(--global-warning-block-text);
     }
 
@@ -125,14 +114,10 @@ blockquote {
     border-color: var(--global-danger-block);
     background-color: var(--global-danger-block-bg);
 
-<<<<<<< HEAD
-    p {
-=======
     em,
     li,
     p,
     strong {
->>>>>>> template/master
       color: var(--global-danger-block-text);
     }
 
@@ -649,13 +634,10 @@ footer.sticky-bottom {
     }
   }
 
-<<<<<<< HEAD
-=======
   .col {
     padding-bottom: 1rem;
   }
 
->>>>>>> template/master
   .grid-sizer,
   .grid-item {
     width: 250px;
@@ -1156,14 +1138,6 @@ ninja-keys {
   --ninja-modal-background: var(--global-bg-color);
   --ninja-z-index: 1031;
 }
-<<<<<<< HEAD
-ninja-keys::part(ninja-input) {
-  color: var(--ninja-selected-text-color);
-}
-ninja-keys::part(ninja-input-wrapper) {
-  background: var(--global-bg-color);
-}
-=======
 
 ninja-keys::part(ninja-input) {
   color: var(--ninja-selected-text-color);
@@ -1330,4 +1304,3 @@ ninja-keys::part(ninja-input-wrapper) {
   background-color: var(--global-theme-color);
   color: var(--global-text-color);
 }
->>>>>>> template/master
