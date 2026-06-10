@@ -1,0 +1,363 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Who Said It?</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #f7f2ea;
+      color: #1f2933;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 20px;
+      background:
+        radial-gradient(circle at top left, rgba(250, 204, 21, 0.22), transparent 34%),
+        linear-gradient(135deg, #f7f2ea 0%, #e8f1ef 100%);
+    }
+
+    main {
+      width: min(720px, 100%);
+    }
+
+    .game-shell {
+      background: rgba(255, 255, 255, 0.88);
+      border: 1px solid rgba(31, 41, 51, 0.12);
+      border-radius: 8px;
+      box-shadow: 0 18px 50px rgba(31, 41, 51, 0.16);
+      padding: 22px;
+    }
+
+    header {
+      display: flex;
+      align-items: start;
+      justify-content: space-between;
+      gap: 16px;
+      border-bottom: 1px solid rgba(31, 41, 51, 0.1);
+      padding-bottom: 14px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 1.7rem;
+      line-height: 1.1;
+    }
+
+    .scoreboard {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      font-weight: 700;
+      font-size: 0.92rem;
+    }
+
+    .pill {
+      border: 1px solid rgba(31, 41, 51, 0.14);
+      border-radius: 999px;
+      padding: 6px 10px;
+      background: #fff;
+      white-space: nowrap;
+    }
+
+    .quote {
+      margin: 22px 0 16px;
+      padding: 20px;
+      border-left: 5px solid #0f766e;
+      background: #effaf7;
+      border-radius: 8px;
+      font-size: clamp(1.2rem, 4vw, 1.8rem);
+      line-height: 1.25;
+      font-weight: 750;
+    }
+
+    .choices {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 10px;
+    }
+
+    button {
+      border: 0;
+      border-radius: 8px;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 750;
+      min-height: 48px;
+      padding: 12px 14px;
+      color: #10201d;
+      background: #facc15;
+      box-shadow: inset 0 -2px 0 rgba(31, 41, 51, 0.12);
+    }
+
+    button:hover,
+    button:focus-visible {
+      background: #fde047;
+      outline: 3px solid rgba(15, 118, 110, 0.35);
+      outline-offset: 2px;
+    }
+
+    .feedback {
+      min-height: 28px;
+      margin-top: 14px;
+      font-weight: 700;
+      color: #0f766e;
+    }
+
+    .result-card {
+      margin-top: 18px;
+      border: 1px solid rgba(15, 118, 110, 0.25);
+      background: #ffffff;
+      border-radius: 8px;
+      padding: 16px;
+    }
+
+    .result-card h2 {
+      font-size: 1rem;
+      margin-bottom: 8px;
+    }
+
+    #resultText {
+      font-weight: 800;
+      overflow-wrap: anywhere;
+    }
+
+    textarea {
+      width: 100%;
+      margin-top: 10px;
+      min-height: 52px;
+      resize: vertical;
+      border: 1px solid rgba(31, 41, 51, 0.18);
+      border-radius: 8px;
+      padding: 10px;
+      font: inherit;
+    }
+
+    [hidden] {
+      display: none !important;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <section class="game-shell" aria-label="Who Said It game">
+      <header>
+        <div>
+          <h1>Who Said It?</h1>
+          <p id="roundStatus">Round 1 of 5</p>
+        </div>
+        <div class="scoreboard" aria-label="Score">
+          <span class="pill" id="scoreStatus">Score 0</span>
+          <span class="pill" id="streakStatus">Streak 0</span>
+        </div>
+      </header>
+
+      <div class="quote" id="quoteText"></div>
+      <div class="choices" id="choices"></div>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+
+      <section class="result-card" id="result" hidden>
+        <h2 id="resultTitle">Result</h2>
+        <p id="resultText"></p>
+        <textarea id="copyFallback" readonly aria-label="Copyable result"></textarea>
+      </section>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const defaultSpeakers = [
+        { id: "planner", name: "The Planner" },
+        { id: "spark", name: "The Spark" },
+        { id: "skeptic", name: "The Skeptic" },
+        { id: "host", name: "The Host" },
+      ];
+
+      const defaultRounds = [
+        {
+          quote: "I made a spreadsheet, but only because the napkin got crowded.",
+          answerId: "planner",
+          choices: ["planner", "spark", "skeptic", "host"],
+        },
+        {
+          quote: "What if the theme is breakfast, but emotionally?",
+          answerId: "spark",
+          choices: ["planner", "spark", "skeptic", "host"],
+        },
+        {
+          quote: "Before we name the plan, can the plan survive Tuesday?",
+          answerId: "skeptic",
+          choices: ["planner", "spark", "skeptic", "host"],
+        },
+        {
+          quote: "I have chairs, snacks, and exactly one mysterious extension cord.",
+          answerId: "host",
+          choices: ["planner", "spark", "skeptic", "host"],
+        },
+        {
+          quote: "Let's decide quickly so future us can pretend we were decisive.",
+          answerId: "planner",
+          choices: ["planner", "spark", "skeptic", "host"],
+        },
+      ];
+
+      const els = {
+        roundStatus: document.querySelector("#roundStatus"),
+        scoreStatus: document.querySelector("#scoreStatus"),
+        streakStatus: document.querySelector("#streakStatus"),
+        quoteText: document.querySelector("#quoteText"),
+        choices: document.querySelector("#choices"),
+        feedback: document.querySelector("#feedback"),
+        result: document.querySelector("#result"),
+        resultTitle: document.querySelector("#resultTitle"),
+        resultText: document.querySelector("#resultText"),
+        copyFallback: document.querySelector("#copyFallback"),
+      };
+
+      let state = createInitialState();
+
+      function createInitialState() {
+        return {
+          speakers: clone(defaultSpeakers),
+          rounds: clone(defaultRounds),
+          currentRound: 0,
+          score: 0,
+          streak: 0,
+          bestStreak: 0,
+          finished: false,
+          lastCorrect: null,
+          resultText: "",
+        };
+      }
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function speakerName(id) {
+        return state.speakers.find((speaker) => speaker.id === id)?.name || id;
+      }
+
+      function activeRound() {
+        return state.rounds[Math.min(state.currentRound, state.rounds.length - 1)];
+      }
+
+      function pick(indexOrId) {
+        if (state.finished || state.currentRound >= state.rounds.length) {
+          return getState();
+        }
+
+        const round = activeRound();
+        const pickedId = typeof indexOrId === "number"
+          ? round.choices[indexOrId]
+          : indexOrId;
+        const correct = pickedId === round.answerId;
+
+        state.lastCorrect = correct;
+        if (correct) {
+          state.score += 1;
+          state.streak += 1;
+          state.bestStreak = Math.max(state.bestStreak, state.streak);
+          els.feedback.textContent = `Correct: ${speakerName(round.answerId)}.`;
+        } else {
+          state.streak = 0;
+          els.feedback.textContent = `Nope. It was ${speakerName(round.answerId)}.`;
+        }
+
+        state.currentRound += 1;
+        if (state.currentRound >= state.rounds.length) {
+          finishGame("Final score");
+        } else {
+          render();
+        }
+
+        return getState();
+      }
+
+      function shareText() {
+        return `Who Said It score ${state.score}/${state.rounds.length} | streak ${state.bestStreak}`;
+      }
+
+      function finishGame(title = "Result") {
+        state.finished = true;
+        state.resultText = shareText();
+        render();
+        els.resultTitle.textContent = title;
+        els.resultText.textContent = state.resultText;
+        els.copyFallback.value = state.resultText;
+        els.result.hidden = false;
+        parent.postMessage({ type: "cartridge-result", text: state.resultText }, "*");
+        return state.resultText;
+      }
+
+      function setState(nextState) {
+        state = {
+          ...state,
+          ...clone(nextState),
+        };
+        state.bestStreak = Math.max(state.bestStreak || 0, state.streak || 0);
+        state.finished = Boolean(state.finished);
+        render();
+      }
+
+      function getState() {
+        return clone(state);
+      }
+
+      function render() {
+        const total = state.rounds.length;
+        const shownRound = Math.min(state.currentRound + (state.finished ? 0 : 1), total);
+        els.roundStatus.textContent = `Round ${shownRound} of ${total}`;
+        els.scoreStatus.textContent = `Score ${state.score}`;
+        els.streakStatus.textContent = `Streak ${state.streak}`;
+
+        if (!state.finished && state.currentRound < state.rounds.length) {
+          const round = activeRound();
+          els.quoteText.textContent = `“${round.quote}”`;
+          els.choices.replaceChildren(
+            ...round.choices.map((id, index) => {
+              const button = document.createElement("button");
+              button.type = "button";
+              button.textContent = speakerName(id);
+              button.addEventListener("click", () => pick(index));
+              return button;
+            }),
+          );
+        } else {
+          els.quoteText.textContent = "All quotes identified.";
+          els.choices.replaceChildren();
+        }
+
+        if (!state.finished) {
+          els.result.hidden = true;
+        }
+      }
+
+      window.__cartridgeWhoSaidIt = {
+        setState,
+        getState,
+        pick,
+        finishGame,
+      };
+
+      render();
+    })();
+  </script>
+</body>
+</html>

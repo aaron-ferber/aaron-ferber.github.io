@@ -1,0 +1,491 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rentle</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172126;
+      --muted: #647075;
+      --paper: #fbf8f0;
+      --panel: #ffffff;
+      --line: #d7d0c2;
+      --accent: #0f766e;
+      --accent-dark: #115e59;
+      --warn: #b45309;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: var(--paper);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    main {
+      width: min(720px, 100%);
+      display: grid;
+      gap: 14px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      border-bottom: 2px solid var(--ink);
+      padding-bottom: 12px;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 9vw, 4rem);
+      line-height: 0.9;
+      letter-spacing: 0;
+    }
+
+    .scoreboard {
+      text-align: right;
+      color: var(--muted);
+      font-weight: 700;
+      min-width: 132px;
+    }
+
+    .panel,
+    .result-card {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 10px 24px rgba(23, 33, 38, 0.08);
+    }
+
+    .round-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+
+    .round-title h2 {
+      font-size: 1.25rem;
+    }
+
+    .round-count {
+      color: var(--muted);
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .clues {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .clue {
+      border-left: 4px solid var(--accent);
+      background: #edf7f5;
+      padding: 10px 12px;
+      border-radius: 0 6px 6px 0;
+      font-weight: 700;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+    }
+
+    input,
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    input,
+    textarea {
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fffdf8;
+      width: 100%;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 14px;
+      background: var(--accent);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button.secondary {
+      background: #dbe8e6;
+      color: var(--accent-dark);
+    }
+
+    button.secondary:hover {
+      background: #c8dbd8;
+    }
+
+    .feedback {
+      min-height: 1.6em;
+      color: var(--warn);
+      font-weight: 800;
+      margin-top: 10px;
+    }
+
+    .history {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    #result[hidden] {
+      display: none;
+    }
+
+    .result-card {
+      border-color: var(--accent);
+      display: grid;
+      gap: 10px;
+    }
+
+    #resultText {
+      font-weight: 900;
+      font-size: 1.05rem;
+    }
+
+    #copyFallback {
+      min-height: 58px;
+      resize: none;
+    }
+
+    @media (max-width: 560px) {
+      header,
+      .round-title,
+      .history-row {
+        align-items: start;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .scoreboard {
+        text-align: left;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Rentle</h1>
+        <p>Guess the monthly rent from listing clues.</p>
+      </div>
+      <div class="scoreboard">
+        <div id="score">Score 0</div>
+        <div id="avgMiss">Avg miss $0</div>
+      </div>
+    </header>
+
+    <section class="panel" aria-label="Current listing">
+      <div class="round-title">
+        <h2 id="listingTitle">Listing</h2>
+        <div class="round-count" id="roundCount">Round 1 / 5</div>
+      </div>
+      <div class="clues" aria-live="polite"></div>
+      <form id="guessForm">
+        <input id="guessInput" inputmode="numeric" autocomplete="off" placeholder="Monthly rent, e.g. 3250" aria-label="Rent guess">
+        <button type="submit">Guess</button>
+        <button type="button" class="secondary" id="revealButton">Clue</button>
+      </form>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel history" aria-label="Round history">
+      <h2>Rounds</h2>
+      <div id="history"></div>
+    </section>
+
+    <section id="result" hidden>
+      <div class="result-card">
+        <h2 id="resultTitle">Final result</h2>
+        <div id="resultText"></div>
+        <textarea id="copyFallback" readonly aria-label="Copyable result"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const seedDeck = [
+        {
+          title: "Prewar one bed near the park",
+          rent: 3350,
+          clues: [
+            "One bedroom in a six-story prewar walkup",
+            "Three blocks from Prospect Park",
+            "Windowed kitchen, no dishwasher",
+            "Heat and hot water included",
+          ],
+        },
+        {
+          title: "Compact Midtown studio",
+          rent: 2895,
+          clues: [
+            "Studio with a sleeping alcove",
+            "Elevator building near Bryant Park",
+            "Laundry room in basement",
+            "Broker fee waived for a 14-month lease",
+          ],
+        },
+        {
+          title: "Sunny Astoria railroad",
+          rent: 2600,
+          clues: [
+            "Railroad one bedroom above a quiet storefront",
+            "Two avenues from the N/W train",
+            "Shared backyard access",
+            "Cats allowed, dogs case by case",
+          ],
+        },
+        {
+          title: "Williamsburg two bed",
+          rent: 4800,
+          clues: [
+            "Two bedrooms with split layout",
+            "In-unit washer and dryer",
+            "Roof deck with skyline view",
+            "Six-minute walk to Bedford Avenue",
+          ],
+        },
+        {
+          title: "Hamilton Heights floor-through",
+          rent: 3150,
+          clues: [
+            "Two bedroom floor-through in a brownstone",
+            "Original shutters and decorative fireplace",
+            "Near City College and the A/B/C/D trains",
+            "Owner lives downstairs",
+          ],
+        },
+      ];
+
+      const initialState = () => ({
+        deck: seedDeck.map((card) => ({ ...card, clues: [...card.clues] })),
+        roundIndex: 0,
+        clueCount: 1,
+        guesses: [],
+        score: 0,
+        finished: false,
+        finalText: "",
+      });
+
+      let state = initialState();
+
+      const els = {
+        score: document.querySelector("#score"),
+        avgMiss: document.querySelector("#avgMiss"),
+        listingTitle: document.querySelector("#listingTitle"),
+        roundCount: document.querySelector("#roundCount"),
+        clues: document.querySelector(".clues"),
+        form: document.querySelector("#guessForm"),
+        input: document.querySelector("#guessInput"),
+        reveal: document.querySelector("#revealButton"),
+        feedback: document.querySelector("#feedback"),
+        history: document.querySelector("#history"),
+        result: document.querySelector("#result"),
+        resultTitle: document.querySelector("#resultTitle"),
+        resultText: document.querySelector("#resultText"),
+        copyFallback: document.querySelector("#copyFallback"),
+      };
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function scoreGuess(guess, actual) {
+        const miss = Math.abs(Number(guess) - Number(actual));
+        const latePenalty = Math.max(0, miss - 250) / 25;
+        const points = Math.max(0, Math.round(1000 - miss / 5 - latePenalty));
+        return { miss, points };
+      }
+
+      function averageMiss() {
+        if (state.guesses.length === 0) return 0;
+        return Math.round(
+          state.guesses.reduce((sum, guess) => sum + guess.miss, 0) /
+            state.guesses.length,
+        );
+      }
+
+      function shareText() {
+        return `Rentle score ${state.score} | avg miss $${averageMiss()} | rounds ${state.guesses.length}`;
+      }
+
+      function render() {
+        const current = state.deck[state.roundIndex];
+        const total = state.deck.length;
+        els.score.textContent = `Score ${state.score}`;
+        els.avgMiss.textContent = `Avg miss $${averageMiss()}`;
+        els.history.innerHTML = state.guesses
+          .map(
+            (guess, index) =>
+              `<div class="history-row"><span>${index + 1}. $${guess.guess.toLocaleString()} vs $${guess.actual.toLocaleString()}</span><span>miss $${guess.miss.toLocaleString()} · ${guess.points} pts</span></div>`,
+          )
+          .join("");
+
+        if (!current || state.finished) {
+          els.listingTitle.textContent = "Listings complete";
+          els.roundCount.textContent = `Round ${Math.min(state.roundIndex, total)} / ${total}`;
+          els.clues.innerHTML = "";
+          els.form.hidden = true;
+          return;
+        }
+
+        els.form.hidden = false;
+        els.listingTitle.textContent = current.title;
+        els.roundCount.textContent = `Round ${state.roundIndex + 1} / ${total}`;
+        els.clues.innerHTML = current.clues
+          .slice(0, state.clueCount)
+          .map((clue) => `<div class="clue">${clue}</div>`)
+          .join("");
+        els.reveal.disabled = state.clueCount >= current.clues.length;
+      }
+
+      function revealClue() {
+        const current = state.deck[state.roundIndex];
+        if (!current || state.finished) return state.clueCount;
+        state.clueCount = Math.min(current.clues.length, state.clueCount + 1);
+        render();
+        return state.clueCount;
+      }
+
+      function submitGuess(value) {
+        if (state.finished) return null;
+        const current = state.deck[state.roundIndex];
+        const guess = Math.round(Number(value));
+        if (!current || !Number.isFinite(guess) || guess <= 0) return null;
+
+        const { miss, points } = scoreGuess(guess, current.rent);
+        state.guesses.push({
+          title: current.title,
+          guess,
+          actual: current.rent,
+          miss,
+          points,
+        });
+        state.score = Math.floor(
+          state.guesses.reduce((sum, item) => sum + item.points, 0) /
+            state.guesses.length,
+        );
+        state.roundIndex += 1;
+        state.clueCount = 1;
+        els.feedback.textContent = `Actual $${current.rent.toLocaleString()} · miss $${miss.toLocaleString()} · ${points} points`;
+        els.input.value = "";
+
+        if (state.roundIndex >= state.deck.length) {
+          finishGame("Listings complete");
+        } else {
+          render();
+        }
+        return state.guesses[state.guesses.length - 1];
+      }
+
+      function finishGame(title = "Final result") {
+        state.finished = true;
+        state.finalText = shareText();
+        els.resultTitle.textContent = title;
+        els.resultText.textContent = state.finalText;
+        els.copyFallback.value = state.finalText;
+        els.result.hidden = false;
+        render();
+        window.parent.postMessage(
+          { type: "cartridge-result", text: state.finalText },
+          "*",
+        );
+        return state.finalText;
+      }
+
+      function setState(nextState) {
+        state = {
+          ...initialState(),
+          ...clone(nextState || {}),
+        };
+        if (!Array.isArray(state.deck)) state.deck = [];
+        if (!Array.isArray(state.guesses)) state.guesses = [];
+        if (state.guesses.length > 0 && !nextState.score) {
+          state.score = Math.floor(
+            state.guesses.reduce((sum, item) => sum + item.points, 0) /
+              state.guesses.length,
+          );
+        }
+        state.clueCount = Math.max(1, Number(state.clueCount) || 1);
+        state.roundIndex = Math.max(0, Number(state.roundIndex) || 0);
+        els.feedback.textContent = "";
+        els.result.hidden = true;
+        render();
+      }
+
+      function getState() {
+        return clone(state);
+      }
+
+      els.form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitGuess(els.input.value);
+      });
+      els.reveal.addEventListener("click", () => revealClue());
+
+      window.__cartridgeRentle = {
+        setState,
+        getState,
+        submitGuess,
+        revealClue,
+        finishGame,
+      };
+
+      render();
+    })();
+  </script>
+</body>
+</html>

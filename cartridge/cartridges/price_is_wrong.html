@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Price Is Wrong</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: #182033;
+      color: #111827;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(460px, 100%);
+      padding: 16px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #f8fafc;
+      box-shadow: 0 18px 42px #0008;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+    h1 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 34px;
+      line-height: 1;
+    }
+    .sub {
+      margin: 6px 0 0;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 750;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(70px, 1fr));
+      gap: 8px;
+      min-width: 150px;
+    }
+    .stat {
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #0f172a;
+      color: #f8fafc;
+      text-align: center;
+    }
+    .label {
+      display: block;
+      color: #bae6fd;
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .value {
+      display: block;
+      margin-top: 2px;
+      font-size: 18px;
+      font-weight: 950;
+    }
+    .card {
+      margin: 16px 0 12px;
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+    }
+    .agency {
+      margin: 0 0 8px;
+      color: #0369a1;
+      font-size: 13px;
+      font-weight: 900;
+      text-transform: uppercase;
+    }
+    .purpose {
+      margin: 0;
+      color: #111827;
+      font-size: 22px;
+      font-weight: 900;
+      line-height: 1.18;
+    }
+    .hint {
+      margin: 10px 0 0;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 750;
+      line-height: 1.35;
+    }
+    .answer {
+      margin-top: 12px;
+      padding: 10px;
+      border-radius: 8px;
+      background: #ecfeff;
+      color: #134e4a;
+      font-weight: 900;
+    }
+    .answer[hidden] { display: none; }
+    form {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    input {
+      width: 100%;
+      min-width: 0;
+      border: 1px solid #94a3b8;
+      border-radius: 8px;
+      padding: 10px 12px;
+      font: inherit;
+      font-weight: 850;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #0ea5e9;
+      color: #082f49;
+      font: inherit;
+      font-weight: 950;
+      min-height: 42px;
+      padding: 10px 12px;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    .status {
+      min-height: 22px;
+      margin: 8px 0 0;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .result {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #020617b8;
+    }
+    .result[hidden] { display: none; }
+    .result-card {
+      width: min(350px, 100%);
+      border: 1px solid #7dd3fc;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fafc;
+      color: #0f172a;
+      box-shadow: 0 16px 38px #0008;
+    }
+    .result-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    .result-card p {
+      margin: 0 0 12px;
+      color: #334155;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    textarea {
+      width: 100%;
+      height: 74px;
+      margin-top: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      font: inherit;
+      resize: none;
+    }
+    @media (max-width: 390px) {
+      main { padding: 12px; }
+      .top { display: grid; }
+      .stats { width: 100%; }
+      h1 { font-size: 30px; }
+      .purpose { font-size: 20px; }
+      form, .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <h1>Price Is Wrong</h1>
+        <p class="sub">Guess the civic contract tab before the reveal.</p>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="label">Score</span>
+          <span class="value" id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Round</span>
+          <span class="value" id="round">1/5</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="card" aria-live="polite">
+      <p class="agency" id="agency"></p>
+      <p class="purpose" id="purpose"></p>
+      <p class="hint" id="hint"></p>
+      <div class="answer" id="answer" hidden></div>
+    </section>
+
+    <form id="guessForm">
+      <input id="guessInput" inputmode="numeric" autocomplete="off" placeholder="Contract amount">
+      <button type="submit">Guess</button>
+    </form>
+
+    <div class="actions">
+      <button class="secondary" type="button" id="revealButton">Reveal</button>
+      <button class="secondary" type="button" id="nextButton">Next</button>
+    </div>
+    <p class="status" id="status"></p>
+  </main>
+
+  <section class="result" id="result" hidden>
+    <div class="result-card">
+      <h2 id="resultTitle">Final score</h2>
+      <p id="resultText"></p>
+      <textarea id="copyFallback" readonly></textarea>
+    </div>
+  </section>
+
+  <script>
+    (() => {
+      const seedDeck = [
+        {
+          agency: "Department of Curb Theater",
+          purpose: "Temporary velvet ropes for a municipal ribbon-cutting rehearsal",
+          hint: "One afternoon, eight stanchions, rush delivery.",
+          amount: 18400,
+        },
+        {
+          agency: "Office of Queue Optimization",
+          purpose: "Consulting memo on elevator lobby line etiquette",
+          hint: "A short report, three stakeholder meetings, many arrows.",
+          amount: 67250,
+        },
+        {
+          agency: "Bureau of Seasonal Fixtures",
+          purpose: "Replacement brackets for snowflake lights on two avenues",
+          hint: "Hardware only, but inspected from a lift truck.",
+          amount: 143900,
+        },
+        {
+          agency: "Parks Comfort Station Unit",
+          purpose: "Emergency repainting of four restroom doors after festival weekend",
+          hint: "Night work and premium odor-blocking primer included.",
+          amount: 38600,
+        },
+        {
+          agency: "Department of Civic Ceremonies",
+          purpose: "Portable lectern fleet with matching rain covers",
+          hint: "Five borough deployment kit, monogrammed bags.",
+          amount: 92775,
+        },
+      ];
+
+      const els = {
+        score: document.getElementById("score"),
+        round: document.getElementById("round"),
+        agency: document.getElementById("agency"),
+        purpose: document.getElementById("purpose"),
+        hint: document.getElementById("hint"),
+        answer: document.getElementById("answer"),
+        guessInput: document.getElementById("guessInput"),
+        status: document.getElementById("status"),
+        result: document.getElementById("result"),
+        resultTitle: document.getElementById("resultTitle"),
+        resultText: document.getElementById("resultText"),
+        copyFallback: document.getElementById("copyFallback"),
+      };
+
+      let state = {
+        deck: seedDeck,
+        roundIndex: 0,
+        score: 0,
+        guesses: [],
+        revealed: false,
+        finished: false,
+      };
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function currency(value) {
+        return "$" + Math.round(Number(value) || 0).toLocaleString("en-US");
+      }
+
+      function current() {
+        return state.deck[state.roundIndex] || state.deck[state.deck.length - 1];
+      }
+
+      function scoreGuess(guess, answer) {
+        const missPercent = Math.round(Math.abs(guess - answer) / answer * 100);
+        const points = Math.max(0, 100 - missPercent);
+        return { missPercent, points };
+      }
+
+      function averageMiss() {
+        if (!state.guesses.length) return 0;
+        const total = state.guesses.reduce((sum, guess) => sum + guess.missPercent, 0);
+        return Math.round(total / state.guesses.length);
+      }
+
+      function shareText() {
+        return `Price Is Wrong score ${state.score} | avg miss ${averageMiss()}% | rounds ${state.guesses.length}`;
+      }
+
+      function render() {
+        const item = current();
+        els.score.textContent = state.score;
+        els.round.textContent = `${Math.min(state.roundIndex + 1, state.deck.length)}/${state.deck.length}`;
+        els.agency.textContent = item.agency;
+        els.purpose.textContent = item.purpose;
+        els.hint.textContent = item.hint || "";
+        if (state.revealed) {
+          els.answer.hidden = false;
+          els.answer.textContent = `Actual contract: ${currency(item.amount)}`;
+        } else {
+          els.answer.hidden = true;
+          els.answer.textContent = "";
+        }
+      }
+
+      function setState(nextState) {
+        state = Object.assign({}, state, clone(nextState));
+        render();
+      }
+
+      function getState() {
+        return Object.assign(clone(state), { current: clone(current()) });
+      }
+
+      function submitGuess(value) {
+        if (state.finished || state.revealed) return getState();
+        const guess = Math.max(0, Math.round(Number(value)));
+        if (!Number.isFinite(guess)) {
+          els.status.textContent = "Enter a number.";
+          return getState();
+        }
+        const item = current();
+        const scored = scoreGuess(guess, item.amount);
+        state.score += scored.points;
+        state.guesses.push({
+          guess,
+          answer: item.amount,
+          missPercent: scored.missPercent,
+          points: scored.points,
+        });
+        state.revealed = true;
+        els.status.textContent = `Missed by ${scored.missPercent}%, earned ${scored.points}.`;
+        render();
+        if (state.guesses.length >= state.deck.length) finishGame("Final score");
+        return getState();
+      }
+
+      function revealAnswer() {
+        if (state.finished) return getState();
+        if (!state.revealed) {
+          const item = current();
+          state.guesses.push({
+            guess: null,
+            answer: item.amount,
+            missPercent: 100,
+            points: 0,
+            revealed: true,
+          });
+        }
+        state.revealed = true;
+        els.status.textContent = "Answer revealed. No points booked for this round.";
+        render();
+        return getState();
+      }
+
+      function nextRound() {
+        if (state.finished) return getState();
+        if (state.roundIndex >= state.deck.length - 1) {
+          finishGame("Final score");
+          return getState();
+        }
+        state.roundIndex += 1;
+        state.revealed = false;
+        els.guessInput.value = "";
+        els.status.textContent = "";
+        render();
+        return getState();
+      }
+
+      function finishGame(title = "Final score") {
+        state.finished = true;
+        const text = shareText();
+        els.resultTitle.textContent = title;
+        els.resultText.textContent = text;
+        els.copyFallback.value = text;
+        els.result.hidden = false;
+        parent.postMessage({type:"cartridge-result", text: text}, "*");
+        return text;
+      }
+
+      document.getElementById("guessForm").addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitGuess(els.guessInput.value);
+      });
+      document.getElementById("revealButton").addEventListener("click", revealAnswer);
+      document.getElementById("nextButton").addEventListener("click", nextRound);
+
+      window.__cartridgePriceWrong = {
+        setState,
+        getState,
+        submitGuess,
+        revealAnswer,
+        nextRound,
+        finishGame,
+      };
+
+      render();
+    })();
+  </script>
+</body>
+</html>

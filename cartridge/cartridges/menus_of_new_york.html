@@ -1,0 +1,503 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Menus of New York</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #231f20;
+      --muted: #6c625c;
+      --paper: #f7f1e5;
+      --panel: #fffaf1;
+      --line: #cbbfae;
+      --accent: #8f2d24;
+      --accent-dark: #722019;
+      --green: #286b52;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: Georgia, "Times New Roman", serif;
+      background: var(--paper);
+      color: var(--ink);
+      display: grid;
+      place-items: center;
+      padding: 18px;
+    }
+
+    main {
+      width: min(720px, 100%);
+      display: grid;
+      gap: 14px;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 12px;
+      border: 3px double var(--ink);
+      border-left: 0;
+      border-right: 0;
+      padding: 14px 0;
+    }
+
+    h1,
+    h2,
+    p {
+      margin: 0;
+    }
+
+    h1 {
+      font-size: clamp(2rem, 8vw, 3.8rem);
+      line-height: 0.95;
+      letter-spacing: 0;
+      text-transform: uppercase;
+    }
+
+    .scoreboard {
+      text-align: right;
+      color: var(--muted);
+      font-weight: 700;
+      min-width: 134px;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .panel,
+    .result-card {
+      background: var(--panel);
+      border: 2px solid var(--line);
+      border-radius: 8px;
+      padding: 16px;
+      box-shadow: 0 10px 20px rgba(35, 31, 32, 0.08);
+    }
+
+    .round-title {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: baseline;
+      margin-bottom: 14px;
+    }
+
+    .round-title h2 {
+      font-size: 1.25rem;
+    }
+
+    .round-count {
+      color: var(--muted);
+      font-weight: 800;
+      white-space: nowrap;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .clues {
+      display: grid;
+      gap: 8px;
+      margin-bottom: 14px;
+    }
+
+    .clue {
+      border: 1px solid var(--line);
+      border-left: 5px solid var(--accent);
+      background: #fffef9;
+      padding: 10px 12px;
+      border-radius: 0 6px 6px 0;
+      font-size: 1.05rem;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: 1fr auto auto;
+      gap: 8px;
+      align-items: center;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    input,
+    button,
+    textarea {
+      font: inherit;
+    }
+
+    input,
+    textarea {
+      border: 2px solid var(--line);
+      border-radius: 6px;
+      padding: 10px 12px;
+      color: var(--ink);
+      background: #fffdf8;
+      width: 100%;
+    }
+
+    button {
+      border: 0;
+      border-radius: 6px;
+      padding: 11px 14px;
+      background: var(--accent);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--accent-dark);
+    }
+
+    button.secondary {
+      background: #ece1d5;
+      color: var(--accent-dark);
+    }
+
+    button.secondary:hover {
+      background: #dfd1c2;
+    }
+
+    .feedback {
+      min-height: 1.6em;
+      color: var(--green);
+      font-weight: 800;
+      margin-top: 10px;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    .history {
+      display: grid;
+      gap: 8px;
+    }
+
+    .history-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 10px;
+      border-top: 1px solid var(--line);
+      padding-top: 8px;
+      color: var(--muted);
+      font-weight: 700;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    #result[hidden] {
+      display: none;
+    }
+
+    .result-card {
+      border-color: var(--accent);
+      display: grid;
+      gap: 10px;
+    }
+
+    #resultText {
+      font-weight: 900;
+      font-size: 1.05rem;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    #copyFallback {
+      min-height: 58px;
+      resize: none;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+    }
+
+    @media (max-width: 560px) {
+      header,
+      .round-title,
+      .history-row {
+        align-items: start;
+        flex-direction: column;
+        text-align: left;
+      }
+
+      .scoreboard {
+        text-align: left;
+      }
+
+      form {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Menus of New York</h1>
+        <p>Guess the year from period menu clues.</p>
+      </div>
+      <div class="scoreboard">
+        <div id="score">Score 0</div>
+        <div id="avgMiss">Avg miss 0y</div>
+      </div>
+    </header>
+
+    <section class="panel" aria-label="Current menu">
+      <div class="round-title">
+        <h2 id="menuTitle">Menu</h2>
+        <div class="round-count" id="roundCount">Round 1 / 5</div>
+      </div>
+      <div class="clues" aria-live="polite"></div>
+      <form id="guessForm">
+        <input id="guessInput" inputmode="numeric" autocomplete="off" placeholder="Year, e.g. 1939" aria-label="Year guess">
+        <button type="submit">Guess</button>
+        <button type="button" class="secondary" id="revealButton">Clue</button>
+      </form>
+      <p class="feedback" id="feedback" aria-live="polite"></p>
+    </section>
+
+    <section class="panel history" aria-label="Round history">
+      <h2>Rounds</h2>
+      <div id="history"></div>
+    </section>
+
+    <section id="result" hidden>
+      <div class="result-card">
+        <h2 id="resultTitle">Final result</h2>
+        <div id="resultText"></div>
+        <textarea id="copyFallback" readonly aria-label="Copyable result"></textarea>
+      </div>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const seedDeck = [
+        {
+          title: "Broadway chop house bill of fare",
+          year: 1898,
+          clues: [
+            "Blue points, roast beef hash, and celery listed by the plate",
+            "Coffee is five cents, pie is ten cents",
+            "Printer notes a ladies' entrance on West 29th Street",
+            "No cocktails appear, but claret is sold by the pint",
+          ],
+        },
+        {
+          title: "Hotel supper after the theater",
+          year: 1912,
+          clues: [
+            "Terrapin, sweetbreads, and chicken a la king anchor the supper card",
+            "Service continues after the eleven o'clock curtain",
+            "The wine list still leans French",
+            "The cover advertises a roof garden orchestra",
+          ],
+        },
+        {
+          title: "Depression-era lunch counter",
+          year: 1933,
+          clues: [
+            "Blue plate special with meat loaf, potato, and coffee",
+            "Tomato juice cocktail appears before the entrees",
+            "Most sandwiches sit between fifteen and twenty-five cents",
+            "The repeal beer list is printed as a fresh insert",
+          ],
+        },
+        {
+          title: "Postwar Midtown coffee shop",
+          year: 1956,
+          clues: [
+            "Tuna melt, chopped liver sandwich, and frosted malted milk",
+            "Air-conditioned dining room promoted in block letters",
+            "Children's portions get their own boxed section",
+            "The house special is a broiled half chicken dinner",
+          ],
+        },
+        {
+          title: "Downtown nouvelle bistro",
+          year: 1984,
+          clues: [
+            "Goat cheese salad, blackened fish, and sun-dried tomatoes",
+            "Espresso and cappuccino sit beside flourless chocolate cake",
+            "California chardonnay is offered by the glass",
+            "The menu names the chef on the front page",
+          ],
+        },
+      ];
+
+      const initialState = () => ({
+        deck: seedDeck.map((card) => ({ ...card, clues: [...card.clues] })),
+        roundIndex: 0,
+        clueCount: 1,
+        guesses: [],
+        score: 0,
+        finished: false,
+        finalText: "",
+      });
+
+      let state = initialState();
+
+      const els = {
+        score: document.querySelector("#score"),
+        avgMiss: document.querySelector("#avgMiss"),
+        menuTitle: document.querySelector("#menuTitle"),
+        roundCount: document.querySelector("#roundCount"),
+        clues: document.querySelector(".clues"),
+        form: document.querySelector("#guessForm"),
+        input: document.querySelector("#guessInput"),
+        reveal: document.querySelector("#revealButton"),
+        feedback: document.querySelector("#feedback"),
+        history: document.querySelector("#history"),
+        result: document.querySelector("#result"),
+        resultTitle: document.querySelector("#resultTitle"),
+        resultText: document.querySelector("#resultText"),
+        copyFallback: document.querySelector("#copyFallback"),
+      };
+
+      function clone(value) {
+        return JSON.parse(JSON.stringify(value));
+      }
+
+      function scoreGuess(guess, actual) {
+        const miss = Math.abs(Number(guess) - Number(actual));
+        const extraPenalty = Math.max(0, miss - 10) * (22 / 3);
+        const base = 1000 - miss * 5 - extraPenalty;
+        const points = Math.max(0, Math.round(base));
+        return { miss, points };
+      }
+
+      function averageMiss() {
+        if (state.guesses.length === 0) return 0;
+        return Math.round(
+          state.guesses.reduce((sum, guess) => sum + guess.miss, 0) /
+            state.guesses.length,
+        );
+      }
+
+      function shareText() {
+        return `Menus score ${state.score} | avg miss ${averageMiss()}y | rounds ${state.guesses.length}`;
+      }
+
+      function render() {
+        const current = state.deck[state.roundIndex];
+        const total = state.deck.length;
+        els.score.textContent = `Score ${state.score}`;
+        els.avgMiss.textContent = `Avg miss ${averageMiss()}y`;
+        els.history.innerHTML = state.guesses
+          .map(
+            (guess, index) =>
+              `<div class="history-row"><span>${index + 1}. ${guess.guess} vs ${guess.actual}</span><span>miss ${guess.miss}y · ${guess.points} pts</span></div>`,
+          )
+          .join("");
+
+        if (!current || state.finished) {
+          els.menuTitle.textContent = "Menus complete";
+          els.roundCount.textContent = `Round ${Math.min(state.roundIndex, total)} / ${total}`;
+          els.clues.innerHTML = "";
+          els.form.hidden = true;
+          return;
+        }
+
+        els.form.hidden = false;
+        els.menuTitle.textContent = current.title;
+        els.roundCount.textContent = `Round ${state.roundIndex + 1} / ${total}`;
+        els.clues.innerHTML = current.clues
+          .slice(0, state.clueCount)
+          .map((clue) => `<div class="clue">${clue}</div>`)
+          .join("");
+        els.reveal.disabled = state.clueCount >= current.clues.length;
+      }
+
+      function revealClue() {
+        const current = state.deck[state.roundIndex];
+        if (!current || state.finished) return state.clueCount;
+        state.clueCount = Math.min(current.clues.length, state.clueCount + 1);
+        render();
+        return state.clueCount;
+      }
+
+      function submitGuess(value) {
+        if (state.finished) return null;
+        const current = state.deck[state.roundIndex];
+        const guess = Math.round(Number(value));
+        if (!current || !Number.isFinite(guess)) return null;
+
+        const { miss, points } = scoreGuess(guess, current.year);
+        state.guesses.push({
+          title: current.title,
+          guess,
+          actual: current.year,
+          miss,
+          points,
+        });
+        state.score = Math.floor(
+          state.guesses.reduce((sum, item) => sum + item.points, 0) /
+            state.guesses.length,
+        );
+        state.roundIndex += 1;
+        state.clueCount = 1;
+        els.feedback.textContent = `Actual ${current.year} · miss ${miss}y · ${points} points`;
+        els.input.value = "";
+
+        if (state.roundIndex >= state.deck.length) {
+          finishGame("Menus complete");
+        } else {
+          render();
+        }
+        return state.guesses[state.guesses.length - 1];
+      }
+
+      function finishGame(title = "Final result") {
+        state.finished = true;
+        state.finalText = shareText();
+        els.resultTitle.textContent = title;
+        els.resultText.textContent = state.finalText;
+        els.copyFallback.value = state.finalText;
+        els.result.hidden = false;
+        render();
+        window.parent.postMessage(
+          { type: "cartridge-result", text: state.finalText },
+          "*",
+        );
+        return state.finalText;
+      }
+
+      function setState(nextState) {
+        state = {
+          ...initialState(),
+          ...clone(nextState || {}),
+        };
+        if (!Array.isArray(state.deck)) state.deck = [];
+        if (!Array.isArray(state.guesses)) state.guesses = [];
+        if (state.guesses.length > 0 && !nextState.score) {
+          state.score = Math.floor(
+            state.guesses.reduce((sum, item) => sum + item.points, 0) /
+              state.guesses.length,
+          );
+        }
+        state.clueCount = Math.max(1, Number(state.clueCount) || 1);
+        state.roundIndex = Math.max(0, Number(state.roundIndex) || 0);
+        els.feedback.textContent = "";
+        els.result.hidden = true;
+        render();
+      }
+
+      function getState() {
+        return clone(state);
+      }
+
+      els.form.addEventListener("submit", (event) => {
+        event.preventDefault();
+        submitGuess(els.input.value);
+      });
+      els.reveal.addEventListener("click", () => revealClue());
+
+      window.__cartridgeMenus = {
+        setState,
+        getState,
+        submitGuess,
+        revealClue,
+        finishGame,
+      };
+
+      render();
+    })();
+  </script>
+</body>
+</html>

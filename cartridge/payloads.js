@@ -96,10 +96,15 @@ export function parseCartridgeInput(raw) {
     return { payload: decodeDataUrl(value), source: "data-url" };
   }
 
-  if (/^[A-Za-z0-9+/=\s]+$/.test(value) && value.length % 4 === 0 && !value.includes("<")) {
+  if (
+    /^[A-Za-z0-9+/=\s]+$/.test(value) &&
+    value.length % 4 === 0 &&
+    !value.includes("<")
+  ) {
     try {
       const decoded = decodeBase64Payload(value);
-      if (decoded.trim().startsWith("<")) return { payload: decoded, source: "base64" };
+      if (decoded.trim().startsWith("<"))
+        return { payload: decoded, source: "base64" };
     } catch (error) {
       return { payload: value, source: "text" };
     }

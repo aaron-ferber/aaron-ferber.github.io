@@ -6,7 +6,10 @@
     <meta name="theme-color" content="#111827" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Cartridge" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
     <title>Cartridge Player</title>
     <link rel="manifest" href="./manifest.webmanifest" />
     <link rel="icon" href="./icon.svg" type="image/svg+xml" />
@@ -29,20 +32,32 @@
             <p>Paste cartridge HTML, base64 text, or choose a local file.</p>
           </div>
           <div class="actions compact">
-            <button id="scanButton" type="button" class="secondary">Scan</button>
+            <button id="scanButton" type="button" class="secondary">
+              Scan
+            </button>
             <label class="file-action">
               File
-              <input id="fileInput" type="file" accept=".html,.txt,.cart,text/html,text/plain" />
+              <input
+                id="fileInput"
+                type="file"
+                accept=".html,.txt,.cart,text/html,text/plain"
+              />
             </label>
           </div>
         </div>
 
-        <textarea id="cartridgeInput" spellcheck="false" placeholder="Paste a cartridge payload here"></textarea>
+        <textarea
+          id="cartridgeInput"
+          spellcheck="false"
+          placeholder="Paste a cartridge payload here"
+        ></textarea>
 
         <div class="actions">
           <button id="runButton" type="button">Run</button>
           <button id="saveButton" type="button" class="secondary">Save</button>
-          <button id="sampleButton" type="button" class="secondary">Sample</button>
+          <button id="sampleButton" type="button" class="secondary">
+            Sample
+          </button>
         </div>
 
         <div id="scannerPanel" class="scanner-panel" hidden>
@@ -50,7 +65,9 @@
           <canvas id="scannerCanvas" hidden></canvas>
           <div class="scanner-footer">
             <p id="scannerStatus">Point the camera at a cartridge QR.</p>
-            <button id="stopScanButton" type="button" class="secondary">Stop</button>
+            <button id="stopScanButton" type="button" class="secondary">
+              Stop
+            </button>
           </div>
         </div>
 
@@ -66,7 +83,9 @@
             <h2 id="shelf-title">Shelf</h2>
             <p>Saved locally in this browser.</p>
           </div>
-          <button id="clearButton" type="button" class="secondary">Clear</button>
+          <button id="clearButton" type="button" class="secondary">
+            Clear
+          </button>
         </div>
         <div id="shelf" class="shelf-list"></div>
       </section>
@@ -78,8 +97,12 @@
             <p id="currentName">No cartridge loaded.</p>
           </div>
           <div class="actions compact">
-            <button id="copyButton" type="button" class="secondary">Copy</button>
-            <button id="downloadButton" type="button" class="secondary">Download</button>
+            <button id="copyButton" type="button" class="secondary">
+              Copy
+            </button>
+            <button id="downloadButton" type="button" class="secondary">
+              Download
+            </button>
           </div>
         </div>
         <iframe id="frame" title="Cartridge runtime"></iframe>

@@ -1,0 +1,514 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Snake</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: #111827;
+      color: #0f172a;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(430px, 100%);
+      padding: 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #f8fafc;
+      box-shadow: 0 18px 40px #0008;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      color: #0f172a;
+      font-size: 40px;
+      line-height: 1;
+    }
+    .sub {
+      margin: 6px 0 0;
+      color: #475569;
+      font-size: 14px;
+      font-weight: 750;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(72px, 1fr));
+      gap: 8px;
+      min-width: 154px;
+    }
+    .stat {
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #0f172a;
+      color: #f8fafc;
+      text-align: center;
+    }
+    .label {
+      display: block;
+      color: #94a3b8;
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .value {
+      display: block;
+      margin-top: 2px;
+      font-size: 18px;
+      font-weight: 950;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(12, 1fr);
+      gap: 3px;
+      aspect-ratio: 1;
+      margin: 16px 0 12px;
+      padding: 8px;
+      border-radius: 8px;
+      background: #1f2937;
+      touch-action: none;
+      user-select: none;
+    }
+    .cell {
+      min-width: 0;
+      border-radius: 3px;
+      background: #263244;
+    }
+    .snake {
+      background: #14b8a6;
+      box-shadow: inset 0 0 0 1px #99f6e4;
+    }
+    .head {
+      background: #0f766e;
+      box-shadow: inset 0 0 0 2px #ccfbf1;
+    }
+    .apple {
+      background: #ef4444;
+      box-shadow: inset 0 0 0 1px #fecaca;
+    }
+    .status {
+      min-height: 22px;
+      margin: 0 0 10px;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    .dpad {
+      display: grid;
+      grid-template-columns: repeat(3, 42px);
+      gap: 5px;
+      justify-content: center;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #14b8a6;
+      color: #042f2e;
+      font: inherit;
+      font-weight: 900;
+      min-height: 40px;
+      padding: 9px 12px;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: #0f172a;
+    }
+    button.arrow {
+      width: 42px;
+      height: 38px;
+      min-height: 38px;
+      padding: 0;
+      background: #0f172a;
+      color: #f8fafc;
+      font-size: 17px;
+    }
+    .spacer { visibility: hidden; }
+    .result {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #020617b8;
+    }
+    .result[hidden] { display: none; }
+    .result-card {
+      width: min(340px, 100%);
+      border: 1px solid #5eead4;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fafc;
+      color: #0f172a;
+      box-shadow: 0 16px 38px #0008;
+    }
+    .result-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    .result-card p {
+      margin: 0 0 12px;
+      color: #334155;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .result-card .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 74px;
+      margin-top: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      font: inherit;
+      resize: none;
+    }
+    @media (max-width: 360px) {
+      main { padding: 10px; }
+      h1 { font-size: 34px; }
+      .top { display: grid; }
+      .stats { width: 100%; }
+      .board { gap: 2px; padding: 6px; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <h1>Snake</h1>
+        <p class="sub">Swipe or steer to eat apples.</p>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="label">Score</span>
+          <span class="value" id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Length</span>
+          <span class="value" id="length">3</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="board" id="board" aria-label="Snake board"></section>
+    <p class="status" id="status">Ready.</p>
+
+    <div class="actions">
+      <button class="secondary" id="newGame" type="button">New</button>
+      <div class="dpad" aria-label="Move controls">
+        <button class="arrow spacer" type="button" tabindex="-1">.</button>
+        <button class="arrow" type="button" data-move="up" aria-label="Move up">U</button>
+        <button class="arrow spacer" type="button" tabindex="-1">.</button>
+        <button class="arrow" type="button" data-move="left" aria-label="Move left">L</button>
+        <button class="arrow" type="button" data-move="down" aria-label="Move down">D</button>
+        <button class="arrow" type="button" data-move="right" aria-label="Move right">R</button>
+      </div>
+      <button class="secondary" id="finish" type="button">End</button>
+    </div>
+  </main>
+
+  <section class="result" id="result" hidden>
+    <div class="result-card">
+      <h2 id="resultTitle">Game over</h2>
+      <p id="resultText"></p>
+      <div class="row">
+        <button id="copyResult" type="button">Copy</button>
+        <button class="secondary" id="resultNewGame" type="button">New</button>
+      </div>
+      <textarea id="copyFallback" readonly hidden></textarea>
+    </div>
+  </section>
+
+  <script>
+    const size = 12;
+    const boardEl = document.getElementById("board");
+    const scoreEl = document.getElementById("score");
+    const lengthEl = document.getElementById("length");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const resultTitleEl = document.getElementById("resultTitle");
+    const resultTextEl = document.getElementById("resultText");
+    const copyFallbackEl = document.getElementById("copyFallback");
+    const cells = [];
+    const vectors = {
+      up: { x: 0, y: -1 },
+      down: { x: 0, y: 1 },
+      left: { x: -1, y: 0 },
+      right: { x: 1, y: 0 },
+    };
+    const opposites = { up: "down", down: "up", left: "right", right: "left" };
+
+    let snake = [];
+    let apple = { x: 0, y: 0 };
+    let direction = "right";
+    let score = 0;
+    let moves = 0;
+    let ended = false;
+    let shareText = "";
+    let resultTitle = "";
+    let startX = 0;
+    let startY = 0;
+
+    function clonePoint(point) {
+      return { x: point.x, y: point.y };
+    }
+
+    function cloneSnake(source) {
+      return source.map(clonePoint);
+    }
+
+    function samePoint(a, b) {
+      return a.x === b.x && a.y === b.y;
+    }
+
+    function inside(point) {
+      return point.x >= 0 && point.x < size && point.y >= 0 && point.y < size;
+    }
+
+    function hasSnake(point, source) {
+      return source.some(function(part) {
+        return samePoint(part, point);
+      });
+    }
+
+    function spawnApple() {
+      for (let y = 0; y < size; y += 1) {
+        for (let x = 0; x < size; x += 1) {
+          const candidate = { x: x, y: y };
+          if (!hasSnake(candidate, snake)) return candidate;
+        }
+      }
+      return { x: -1, y: -1 };
+    }
+
+    function resultLine() {
+      return "Snake score " + score + " | length " + snake.length + " | moves " + moves;
+    }
+
+    function render() {
+      scoreEl.textContent = score;
+      lengthEl.textContent = snake.length;
+      cells.forEach(function(cell) {
+        cell.className = "cell";
+        cell.setAttribute("aria-label", "empty");
+      });
+      if (inside(apple)) {
+        const appleCell = cells[apple.y * size + apple.x];
+        appleCell.className = "cell apple";
+        appleCell.setAttribute("aria-label", "apple");
+      }
+      snake.forEach(function(part, index) {
+        if (!inside(part)) return;
+        const cell = cells[part.y * size + part.x];
+        cell.className = index === 0 ? "cell snake head" : "cell snake";
+        cell.setAttribute("aria-label", index === 0 ? "snake head" : "snake");
+      });
+    }
+
+    function finishGame(title) {
+      ended = true;
+      resultTitle = title || "Game over";
+      shareText = resultLine();
+      resultTitleEl.textContent = resultTitle;
+      resultTextEl.textContent = shareText;
+      copyFallbackEl.hidden = true;
+      copyFallbackEl.value = shareText;
+      resultEl.hidden = false;
+      statusEl.textContent = "Result ready.";
+      parent.postMessage({type:"cartridge-result", text: shareText}, "*");
+    }
+
+    function normalizedDirection(nextDirection) {
+      if (!vectors[nextDirection]) return direction;
+      if (snake.length > 1 && opposites[direction] === nextDirection) return direction;
+      return nextDirection;
+    }
+
+    function step(nextDirection) {
+      if (ended) return getState();
+      direction = normalizedDirection(nextDirection || direction);
+
+      const vector = vectors[direction];
+      const head = snake[0];
+      const nextHead = { x: head.x + vector.x, y: head.y + vector.y };
+      const grows = samePoint(nextHead, apple);
+      const nextSnake = [nextHead].concat(snake);
+      if (!grows) nextSnake.pop();
+
+      moves += 1;
+
+      if (!inside(nextHead) || hasSnake(nextHead, nextSnake.slice(1))) {
+        snake = nextSnake;
+        render();
+        finishGame("Game over");
+        return getState();
+      }
+
+      snake = nextSnake;
+      if (grows) {
+        score += 1;
+        apple = spawnApple();
+        statusEl.textContent = "+1 apple.";
+        if (!inside(apple)) finishGame("Board filled");
+      } else {
+        statusEl.textContent = "Moved.";
+      }
+
+      render();
+      return getState();
+    }
+
+    function copyResult() {
+      const text = shareText || resultLine();
+      function fallback() {
+        copyFallbackEl.hidden = false;
+        copyFallbackEl.value = text;
+        copyFallbackEl.focus();
+        copyFallbackEl.select();
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          statusEl.textContent = "Copied.";
+        }, fallback);
+      } else {
+        fallback();
+      }
+    }
+
+    function setState(nextState) {
+      snake = cloneSnake(nextState.snake || [
+        { x: 4, y: 5 },
+        { x: 3, y: 5 },
+        { x: 2, y: 5 },
+      ]);
+      apple = clonePoint(nextState.apple || spawnApple());
+      direction = vectors[nextState.direction] ? nextState.direction : "right";
+      score = nextState.score || 0;
+      moves = nextState.moves || 0;
+      ended = Boolean(nextState.ended);
+      shareText = "";
+      resultTitle = ended ? "Game over" : "";
+      resultEl.hidden = true;
+      copyFallbackEl.hidden = true;
+      statusEl.textContent = ended ? "Result ready." : "Ready.";
+      render();
+    }
+
+    function getState() {
+      return {
+        snake: cloneSnake(snake),
+        apple: clonePoint(apple),
+        direction: direction,
+        score: score,
+        moves: moves,
+        ended: ended,
+        resultTitle: resultTitle,
+      };
+    }
+
+    function newGame() {
+      setState({
+        snake: [
+          { x: 4, y: 5 },
+          { x: 3, y: 5 },
+          { x: 2, y: 5 },
+        ],
+        apple: { x: 8, y: 5 },
+        direction: "right",
+        score: 0,
+        moves: 0,
+      });
+    }
+
+    for (let index = 0; index < size * size; index += 1) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.setAttribute("role", "gridcell");
+      cells.push(cell);
+      boardEl.append(cell);
+    }
+
+    boardEl.addEventListener("pointerdown", function(event) {
+      startX = event.clientX;
+      startY = event.clientY;
+      boardEl.setPointerCapture(event.pointerId);
+    });
+
+    boardEl.addEventListener("pointerup", function(event) {
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      const distance = Math.max(Math.abs(dx), Math.abs(dy));
+      if (distance < 28) return;
+      if (Math.abs(dx) > Math.abs(dy)) {
+        step(dx > 0 ? "right" : "left");
+      } else {
+        step(dy > 0 ? "down" : "up");
+      }
+    });
+
+    document.addEventListener("keydown", function(event) {
+      const keys = {
+        ArrowLeft: "left",
+        ArrowRight: "right",
+        ArrowUp: "up",
+        ArrowDown: "down",
+        a: "left",
+        d: "right",
+        w: "up",
+        s: "down",
+        A: "left",
+        D: "right",
+        W: "up",
+        S: "down",
+      };
+      const nextDirection = keys[event.key];
+      if (!nextDirection) return;
+      event.preventDefault();
+      step(nextDirection);
+    });
+
+    document.querySelectorAll("[data-move]").forEach(function(button) {
+      button.addEventListener("click", function() {
+        step(button.dataset.move);
+      });
+    });
+
+    document.getElementById("newGame").addEventListener("click", newGame);
+    document.getElementById("resultNewGame").addEventListener("click", newGame);
+    document.getElementById("finish").addEventListener("click", function() {
+      finishGame("Final score");
+    });
+    document.getElementById("copyResult").addEventListener("click", copyResult);
+
+    window.__cartridgeSnake = {
+      setState: setState,
+      getState: getState,
+      step: step,
+      finishGame: finishGame,
+    };
+
+    newGame();
+  </script>
+</body>
+</html>
