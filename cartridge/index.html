@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#111827">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-title" content="Cartridge">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>Cartridge Player</title>
+  <link rel="manifest" href="./manifest.webmanifest">
+  <link rel="icon" href="./icon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <p class="eyebrow">Offline-first</p>
+      <h1>Cartridge Player</h1>
+    </div>
+    <div class="status" id="status">checking cache</div>
+  </header>
+
+  <main class="layout">
+    <section class="panel import-panel" aria-labelledby="import-title">
+      <div class="panel-head">
+        <div>
+          <h2 id="import-title">Import</h2>
+          <p>Paste cartridge HTML, base64 text, or choose a local file.</p>
+        </div>
+        <label class="file-action">
+          File
+          <input id="fileInput" type="file" accept=".html,.txt,.cart,text/html,text/plain">
+        </label>
+      </div>
+
+      <textarea id="cartridgeInput" spellcheck="false" placeholder="Paste a cartridge payload here"></textarea>
+
+      <div class="actions">
+        <button id="runButton" type="button">Run</button>
+        <button id="saveButton" type="button" class="secondary">Save</button>
+        <button id="sampleButton" type="button" class="secondary">Sample</button>
+      </div>
+    </section>
+
+    <section class="panel shelf-panel" aria-labelledby="shelf-title">
+      <div class="panel-head">
+        <div>
+          <h2 id="shelf-title">Shelf</h2>
+          <p>Saved locally in this browser.</p>
+        </div>
+        <button id="clearButton" type="button" class="secondary">Clear</button>
+      </div>
+      <div id="shelf" class="shelf-list"></div>
+    </section>
+
+    <section class="panel player-panel" aria-labelledby="player-title">
+      <div class="panel-head">
+        <div>
+          <h2 id="player-title">Player</h2>
+          <p id="currentName">No cartridge loaded.</p>
+        </div>
+        <div class="actions compact">
+          <button id="copyButton" type="button" class="secondary">Copy</button>
+          <button id="downloadButton" type="button" class="secondary">Download</button>
+        </div>
+      </div>
+      <iframe id="frame" title="Cartridge runtime"></iframe>
+    </section>
+  </main>
+
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
