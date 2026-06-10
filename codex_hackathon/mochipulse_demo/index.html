@@ -1,0 +1,145 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Mochi Pulse</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" id="app" data-empty="true">
+      <section class="play-panel" aria-labelledby="app-title">
+        <header class="masthead">
+          <div>
+            <p class="eyebrow">Health mirror pet lab</p>
+            <h1 id="app-title">Mochi Pulse</h1>
+          </div>
+          <a class="pages-link" href="https://aaron-ferber.github.io/codex_hackathon/">/codex_hackathon</a>
+        </header>
+
+        <div class="pet-device" id="pet-device" data-mood="steady" data-pattern="brush" data-evolution="baby">
+          <div class="device-top" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="lcd-screen" aria-live="polite">
+            <div class="screen-status">
+              <span id="pet-name">Awaiting hatch</span>
+              <span id="pet-mood">Dormant</span>
+            </div>
+
+            <div class="pet-stage">
+              <div class="wall-glow" aria-hidden="true">
+                <img id="pet-art" alt="" hidden />
+              </div>
+              <div class="reaction-effects" id="reaction-effects" aria-hidden="true"></div>
+              <div class="pedestal" aria-hidden="true"></div>
+              <div class="met-pet" aria-label="Mochi Pulse virtual pet">
+                <div class="pet-tail" aria-hidden="true"></div>
+                <div class="pet-ear pet-ear-left"></div>
+                <div class="pet-ear pet-ear-right"></div>
+                <div class="pet-tuft" aria-hidden="true"><span></span></div>
+                <div class="pet-body">
+                  <div class="pet-face" aria-hidden="true">
+                    <span class="eye eye-left"></span>
+                    <span class="eye eye-right"></span>
+                    <span class="cheek cheek-left"></span>
+                    <span class="cheek cheek-right"></span>
+                    <span class="nose"></span>
+                    <span class="mouth"></span>
+                  </div>
+                  <div class="pet-belly" aria-hidden="true"></div>
+                  <span class="pet-paw pet-paw-left" aria-hidden="true"></span>
+                  <span class="pet-paw pet-paw-right" aria-hidden="true"></span>
+                </div>
+                <div class="pet-feet" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+
+            <p class="strength-badge" id="strength-badge">Baby form - STR 0</p>
+            <p class="pet-message" id="pet-message">Hatch a Met backdrop, then keep Mochi strong with care and health signals.</p>
+          </div>
+
+          <div class="device-controls" id="care-buttons" aria-label="Care actions"></div>
+        </div>
+      </section>
+
+      <section class="control-panel" aria-label="Mochi Pulse controls">
+        <form class="hatch-card" id="hatch-form">
+          <label for="hatch-input">Met link or object ID</label>
+          <div class="hatch-row">
+            <input
+              id="hatch-input"
+              name="hatch"
+              type="text"
+              autocomplete="off"
+              placeholder="metmuseum.org/art/collection/search/436535"
+            />
+            <button type="submit" id="hatch-button">Hatch</button>
+          </div>
+          <p class="status-message" id="status-message" data-tone="neutral">
+            Paste a Met object page, API URL, object ID, or search phrase.
+          </p>
+        </form>
+
+        <div class="sample-row" id="sample-row" aria-label="Quick hatch samples"></div>
+
+        <div class="candidate-list" id="candidate-list" aria-label="Search results"></div>
+
+        <form class="health-card" id="health-form" aria-labelledby="health-title">
+          <div class="health-score-row">
+            <div class="health-ring" id="health-ring" data-stage="steady" style="--score: 0">
+              <span id="health-score">0</span>
+            </div>
+            <div>
+              <p class="eyebrow">Health pulse</p>
+              <h2 id="health-title">Signals driving Mochi</h2>
+              <p class="health-nudge" id="health-nudge">Choose which health stats should shape the pet.</p>
+            </div>
+          </div>
+
+          <div class="health-mini-grid" id="health-metric-cards" aria-label="Selected health stats"></div>
+          <div class="preset-row" id="health-presets" aria-label="Demo health presets"></div>
+
+          <div class="health-config-head">
+            <h3>Shown stats and goals</h3>
+            <span id="health-enabled-count">0 active</span>
+          </div>
+          <div class="health-picker" id="health-picker"></div>
+          <div class="health-values" id="health-values"></div>
+          <button class="motion-button" id="motion-button" type="button">
+            Enable motion play
+          </button>
+        </form>
+
+        <article class="art-card">
+          <div>
+            <p class="eyebrow">Backdrop spirit</p>
+            <h2 id="art-title">No artwork selected</h2>
+            <p id="art-meta" class="art-meta"></p>
+          </div>
+          <div class="tag-row" id="art-tags"></div>
+          <p id="pet-lore" class="pet-lore">Choose a Met object to wake the first pet.</p>
+          <a id="met-link" class="met-link" target="_blank" rel="noreferrer">The Met</a>
+        </article>
+
+        <div class="meter-list" id="meter-list" aria-label="Pet care meters"></div>
+      </section>
+
+      <section class="gallery-panel" aria-label="Adopted Mochi gallery">
+        <div class="gallery-heading">
+          <p class="eyebrow">Adopted shelf</p>
+          <h2>Gallery</h2>
+        </div>
+        <div class="gallery-strip" id="gallery"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
