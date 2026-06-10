@@ -127,11 +127,7 @@ function decodePayload(raw) {
     const comma = value.indexOf(",");
     return comma > -1 ? decodeURIComponent(value.slice(comma + 1)) : value;
   }
-  if (
-    /^[A-Za-z0-9+/=\s]+$/.test(value) &&
-    value.length % 4 === 0 &&
-    !value.includes("<")
-  ) {
+  if (/^[A-Za-z0-9+/=\s]+$/.test(value) && value.length % 4 === 0 && !value.includes("<")) {
     try {
       const decoded = atob(value.replace(/\s+/g, ""));
       if (decoded.trim().startsWith("<")) return decoded;
@@ -185,9 +181,7 @@ async function saveActive() {
 }
 
 async function renderShelf() {
-  const records = (await getAllCartridges()).sort(
-    (a, b) => b.savedAt - a.savedAt,
-  );
+  const records = (await getAllCartridges()).sort((a, b) => b.savedAt - a.savedAt);
   shelf.replaceChildren();
   if (!records.length) {
     const empty = document.createElement("div");
@@ -212,9 +206,7 @@ async function renderShelf() {
     const run = document.createElement("button");
     run.type = "button";
     run.textContent = "Run";
-    run.addEventListener("click", () =>
-      runPayload(record.payload, record.title),
-    );
+    run.addEventListener("click", () => runPayload(record.payload, record.title));
 
     item.append(copy, run);
     shelf.append(item);
@@ -277,18 +269,14 @@ async function registerServiceWorker() {
   }
 }
 
-document
-  .querySelector("#runButton")
-  .addEventListener("click", () => runPayload(input.value));
+document.querySelector("#runButton").addEventListener("click", () => runPayload(input.value));
 document.querySelector("#saveButton").addEventListener("click", saveActive);
 document.querySelector("#sampleButton").addEventListener("click", () => {
   input.value = sampleCartridge;
   runPayload(sampleCartridge, "Sample cartridge");
 });
 document.querySelector("#copyButton").addEventListener("click", copyActive);
-document
-  .querySelector("#downloadButton")
-  .addEventListener("click", downloadActive);
+document.querySelector("#downloadButton").addEventListener("click", downloadActive);
 document.querySelector("#clearButton").addEventListener("click", async () => {
   await clearCartridges();
   await renderShelf();
