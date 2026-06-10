@@ -1,3 +1,6 @@
+import { EXAMPLE_CARTRIDGES } from "./examples.js";
+import { parseCartridgeInput } from "./payloads.js";
+
 const dbName = "cartridge-player";
 const storeName = "cartridges";
 
@@ -7,9 +10,18 @@ const frame = document.querySelector("#frame");
 const shelf = document.querySelector("#shelf");
 const status = document.querySelector("#status");
 const currentName = document.querySelector("#currentName");
+const examples = document.querySelector("#examples");
+const scanButton = document.querySelector("#scanButton");
+const stopScanButton = document.querySelector("#stopScanButton");
+const scannerPanel = document.querySelector("#scannerPanel");
+const scannerVideo = document.querySelector("#scannerVideo");
+const scannerCanvas = document.querySelector("#scannerCanvas");
+const scannerStatus = document.querySelector("#scannerStatus");
 
 let activePayload = "";
 let activeTitle = "";
+let scannerStream = null;
+let scannerFrame = 0;
 
 const sampleCartridge = `<!doctype html>
 <html lang="en">
@@ -121,21 +133,7 @@ async function clearCartridges() {
 }
 
 function decodePayload(raw) {
-  const value = raw.trim();
-  if (!value) return "";
-  if (/^data:text\/html/i.test(value)) {
-    const comma = value.indexOf(",");
-    return comma > -1 ? decodeURIComponent(value.slice(comma + 1)) : value;
-  }
-  if (/^[A-Za-z0-9+/=\s]+$/.test(value) && value.length % 4 === 0 && !value.includes("<")) {
-    try {
-      const decoded = atob(value.replace(/\s+/g, ""));
-      if (decoded.trim().startsWith("<")) return decoded;
-    } catch (error) {
-      return value;
-    }
-  }
-  return value;
+  return parseCartridgeInput(raw).payload;
 }
 
 function titleFromPayload(payload) {
@@ -151,7 +149,7 @@ function titleFromPayload(payload) {
 }
 
 function runPayload(raw, title = "") {
-  const payload = decodePayload(raw);
+  const { payload } = parseCartridgeInput(raw);
   if (!payload) {
     toast("Paste or choose a cartridge first.");
     return;
@@ -213,6 +211,21 @@ async function renderShelf() {
   }
 }
 
+function renderExamples() {
+  examples.replaceChildren();
+  for (const example of EXAMPLE_CARTRIDGES) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "example-button";
+    button.innerHTML = `<span>${example.title}</span><small>${example.tagline}</small>`;
+    button.addEventListener("click", () => {
+      input.value = example.payload;
+      runPayload(example.payload, example.title);
+    });
+    examples.append(button);
+  }
+}
+
 async function copyActive() {
   const payload = activePayload || decodePayload(input.value);
   if (!payload) {
@@ -242,13 +255,81 @@ function downloadActive() {
 
 async function loadHashPayload() {
   if (!location.hash.startsWith("#cart=")) return;
-  const encoded = location.hash.slice("#cart=".length);
   try {
-    const payload = decodeURIComponent(encoded);
+    const { payload } = parseCartridgeInput(location.hash);
     input.value = payload;
     runPayload(payload);
   } catch (error) {
     toast("Could not read cartridge from URL.");
+  }
+}
+
+function stopScanner() {
+  if (scannerFrame) {
+    cancelAnimationFrame(scannerFrame);
+    scannerFrame = 0;
+  }
+  if (scannerStream) {
+    for (const track of scannerStream.getTracks()) {
+      track.stop();
+    }
+    scannerStream = null;
+  }
+  scannerVideo.srcObject = null;
+  scannerPanel.hidden = true;
+}
+
+function scanVideoFrame() {
+  if (!scannerStream) return;
+  if (scannerVideo.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+    const width = scannerVideo.videoWidth;
+    const height = scannerVideo.videoHeight;
+    if (width && height) {
+      scannerCanvas.width = width;
+      scannerCanvas.height = height;
+      const context = scannerCanvas.getContext("2d", {
+        willReadFrequently: true,
+      });
+      context.drawImage(scannerVideo, 0, 0, width, height);
+      const imageData = context.getImageData(0, 0, width, height);
+      const result = window.jsQR(imageData.data, width, height, {
+        inversionAttempts: "dontInvert",
+      });
+      if (result && result.data) {
+        input.value = result.data;
+        runPayload(result.data);
+        stopScanner();
+        toast("Scanned cartridge. Save it to keep it.");
+        return;
+      }
+    }
+  }
+  scannerFrame = requestAnimationFrame(scanVideoFrame);
+}
+
+async function startScanner() {
+  if (!window.jsQR) {
+    toast("QR scanner is unavailable.");
+    return;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+    toast("Camera access is unavailable here.");
+    return;
+  }
+  stopScanner();
+  scannerPanel.hidden = false;
+  scannerStatus.textContent = "Point the camera at a cartridge QR.";
+  try {
+    scannerStream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: { ideal: "environment" } },
+      audio: false,
+    });
+    scannerVideo.srcObject = scannerStream;
+    await scannerVideo.play();
+    scanVideoFrame();
+  } catch (error) {
+    stopScanner();
+    toast("Camera permission was not available.");
   }
 }
 
@@ -271,6 +352,8 @@ async function registerServiceWorker() {
 
 document.querySelector("#runButton").addEventListener("click", () => runPayload(input.value));
 document.querySelector("#saveButton").addEventListener("click", saveActive);
+scanButton.addEventListener("click", startScanner);
+stopScanButton.addEventListener("click", stopScanner);
 document.querySelector("#sampleButton").addEventListener("click", () => {
   input.value = sampleCartridge;
   runPayload(sampleCartridge, "Sample cartridge");
@@ -305,6 +388,7 @@ window.addEventListener("offline", () => {
 
 async function start() {
   await registerServiceWorker();
+  renderExamples();
   await renderShelf();
   await loadHashPayload();
 }

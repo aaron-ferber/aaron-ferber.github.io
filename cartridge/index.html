@@ -28,10 +28,13 @@
             <h2 id="import-title">Import</h2>
             <p>Paste cartridge HTML, base64 text, or choose a local file.</p>
           </div>
-          <label class="file-action">
-            File
-            <input id="fileInput" type="file" accept=".html,.txt,.cart,text/html,text/plain" />
-          </label>
+          <div class="actions compact">
+            <button id="scanButton" type="button" class="secondary">Scan</button>
+            <label class="file-action">
+              File
+              <input id="fileInput" type="file" accept=".html,.txt,.cart,text/html,text/plain" />
+            </label>
+          </div>
         </div>
 
         <textarea id="cartridgeInput" spellcheck="false" placeholder="Paste a cartridge payload here"></textarea>
@@ -40,6 +43,20 @@
           <button id="runButton" type="button">Run</button>
           <button id="saveButton" type="button" class="secondary">Save</button>
           <button id="sampleButton" type="button" class="secondary">Sample</button>
+        </div>
+
+        <div id="scannerPanel" class="scanner-panel" hidden>
+          <video id="scannerVideo" playsinline muted></video>
+          <canvas id="scannerCanvas" hidden></canvas>
+          <div class="scanner-footer">
+            <p id="scannerStatus">Point the camera at a cartridge QR.</p>
+            <button id="stopScanButton" type="button" class="secondary">Stop</button>
+          </div>
+        </div>
+
+        <div class="examples-block">
+          <h3>Examples</h3>
+          <div id="examples" class="examples-list"></div>
         </div>
       </section>
 
@@ -69,6 +86,7 @@
       </section>
     </main>
 
+    <script src="./lib/jsQR.js"></script>
     <script src="./app.js" type="module"></script>
   </body>
 </html>
