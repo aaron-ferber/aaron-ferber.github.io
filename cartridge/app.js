@@ -142,7 +142,11 @@ function titleFromPayload(payload) {
   const match = payload.match(/<title>(.*?)<\/title>/i);
   if (match?.[1]?.trim()) return match[1].trim().slice(0, 80);
   const heading = payload.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (heading?.[1]?.trim()) return heading[1].replace(/<[^>]+>/g, "").trim().slice(0, 80);
+  if (heading?.[1]?.trim())
+    return heading[1]
+      .replace(/<[^>]+>/g, "")
+      .trim()
+      .slice(0, 80);
   return `Cartridge ${new Date().toLocaleString()}`;
 }
 
@@ -170,7 +174,7 @@ async function saveActive() {
     id: crypto.randomUUID(),
     title,
     payload,
-    savedAt: Date.now()
+    savedAt: Date.now(),
   });
   await renderShelf();
   toast("Saved locally.");
