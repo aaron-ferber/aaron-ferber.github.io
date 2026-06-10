@@ -94,13 +94,13 @@ const FAVORITE_BY_DEPARTMENT = new Map([
 const clamp = (value, min = 0, max = 100) => Math.min(Math.max(value, min), max);
 
 export function extractObjectId(input) {
-  const trimmed = String(input == null ? '' : input).trim();
+  const trimmed = String(input ?? '').trim();
   if (/^\d+$/.test(trimmed)) return Number(trimmed);
 
   let parsed;
   try {
     parsed = new URL(trimmed);
-  } catch (error) {
+  } catch {
     return null;
   }
 
@@ -108,37 +108,37 @@ export function extractObjectId(input) {
   if (pathMatch) return Number(pathMatch[1]);
 
   const queryId = parsed.searchParams.get('objectID')
-    || parsed.searchParams.get('objectId')
-    || parsed.searchParams.get('oid')
-    || parsed.searchParams.get('id');
+    ?? parsed.searchParams.get('objectId')
+    ?? parsed.searchParams.get('oid')
+    ?? parsed.searchParams.get('id');
   if (queryId && /^\d+$/.test(queryId)) return Number(queryId);
 
   return null;
 }
 
 export function extractSearchQuery(input) {
-  const trimmed = String(input == null ? '' : input).trim();
+  const trimmed = String(input ?? '').trim();
   if (!trimmed || /^\d+$/.test(trimmed)) return '';
 
   try {
     const parsed = new URL(trimmed);
     const directQuery = parsed.searchParams.get('q')
-      || parsed.searchParams.get('ft')
-      || parsed.searchParams.get('search');
+      ?? parsed.searchParams.get('ft')
+      ?? parsed.searchParams.get('search');
     if (directQuery) return directQuery.trim();
 
     const hashQuery = parsed.hash.match(/[?&](?:q|ft|search)=([^&]+)/);
     if (hashQuery) return decodeURIComponent(hashQuery[1].replace(/\+/g, ' ')).trim();
 
     return '';
-  } catch (error) {
+  } catch {
     return trimmed;
   }
 }
 
 export function normalizeMetObject(object) {
   const tags = Array.isArray(object.tags)
-    ? object.tags.map((tag) => tag && tag.term).filter(Boolean).slice(0, 6)
+    ? object.tags.map((tag) => tag?.term).filter(Boolean).slice(0, 6)
     : [];
 
   return {
@@ -213,10 +213,10 @@ export function applyCareAction(state, action) {
   if (!care) return state;
 
   return {
-    hunger: clamp((typeof state.hunger === 'number' ? state.hunger : 0) + care.deltas.hunger),
-    joy: clamp((typeof state.joy === 'number' ? state.joy : 0) + care.deltas.joy),
-    shine: clamp((typeof state.shine === 'number' ? state.shine : 0) + care.deltas.shine),
-    curiosity: clamp((typeof state.curiosity === 'number' ? state.curiosity : 0) + care.deltas.curiosity),
+    hunger: clamp((state.hunger ?? 0) + care.deltas.hunger),
+    joy: clamp((state.joy ?? 0) + care.deltas.joy),
+    shine: clamp((state.shine ?? 0) + care.deltas.shine),
+    curiosity: clamp((state.curiosity ?? 0) + care.deltas.curiosity),
     lastAction: action,
     lastMessage: care.message,
     updatedAt: Date.now(),
@@ -225,10 +225,10 @@ export function applyCareAction(state, action) {
 
 export function getPetMood(state) {
   const values = [
-    typeof state.hunger === 'number' ? state.hunger : 0,
-    typeof state.joy === 'number' ? state.joy : 0,
-    typeof state.shine === 'number' ? state.shine : 0,
-    typeof state.curiosity === 'number' ? state.curiosity : 0,
+    state.hunger ?? 0,
+    state.joy ?? 0,
+    state.shine ?? 0,
+    state.curiosity ?? 0,
   ];
   const average = values.reduce((total, value) => total + value, 0) / values.length;
   const weakest = Math.min(...values);
@@ -241,10 +241,10 @@ export function getPetMood(state) {
 
 export function getPetEvolution(state, healthScore = 0) {
   const careValues = [
-    typeof state.hunger === 'number' ? state.hunger : 0,
-    typeof state.joy === 'number' ? state.joy : 0,
-    typeof state.shine === 'number' ? state.shine : 0,
-    typeof state.curiosity === 'number' ? state.curiosity : 0,
+    state.hunger ?? 0,
+    state.joy ?? 0,
+    state.shine ?? 0,
+    state.curiosity ?? 0,
   ];
   const careAverage = careValues.reduce((total, value) => total + value, 0) / careValues.length;
   const weakestCare = Math.min(...careValues);
@@ -261,7 +261,7 @@ export function getPetEvolution(state, healthScore = 0) {
 }
 
 export function getCareActions() {
-  return JSON.parse(JSON.stringify(CARE_ACTIONS));
+  return structuredClone(CARE_ACTIONS);
 }
 
 function chooseFavoriteCare(artwork, seed) {
@@ -278,13 +278,13 @@ function chooseFavoriteCare(artwork, seed) {
 
 function makePetName(artwork) {
   const words = artwork.title
-    .replace(/[^A-Za-z0-9\s-]/g, '')
+    .replace(/[^\p{L}\p{N}\s-]/gu, '')
     .split(/\s+/)
     .filter((word) => word.length > 2);
   const cypressWord = words.find((word) => /^cypress/i.test(word));
   const anchor = cypressWord
-    || words.find((word) => !/^(the|with|and|from|for|after|study|portrait|field)$/i.test(word))
-    || 'Met';
+    ?? words.find((word) => !/^(the|with|and|from|for|after|study|portrait|field)$/i.test(word))
+    ?? 'Met';
   const suffixes = ['Sprout', 'Mote', 'Bean', 'Whisp', 'Nub', 'Pip'];
   const suffix = cypressWord ? 'Sprout' : suffixes[hashString(artwork.title) % suffixes.length];
 

@@ -128,20 +128,43 @@ h2 {
   min-height: 100vh;
   margin: 0 auto;
   padding: 28px 0;
-  align-items: center;
+  align-items: start;
 }
 
 .play-panel {
   grid-area: play;
+  position: sticky;
+  top: 24px;
+  align-self: start;
   min-width: 0;
 }
 
 .control-panel {
   grid-area: controls;
   display: grid;
-  align-content: center;
+  align-content: start;
   gap: 14px;
+  max-height: calc(100vh - 56px);
   min-width: 0;
+  overflow-y: auto;
+  padding-right: 8px;
+  scrollbar-gutter: stable;
+  overscroll-behavior: contain;
+}
+
+.control-panel::-webkit-scrollbar {
+  width: 10px;
+}
+
+.control-panel::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.control-panel::-webkit-scrollbar-thumb {
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-radius: 999px;
+  background: rgba(126, 81, 220, 0.46);
 }
 
 .gallery-panel {
@@ -1201,11 +1224,24 @@ h2 {
       "play"
       "controls"
       "gallery";
+    min-height: auto;
     align-items: stretch;
+  }
+
+  .play-panel {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: 10px;
+    background:
+      linear-gradient(180deg, rgba(255, 247, 229, 0.96), rgba(255, 247, 229, 0.78) 72%, transparent);
   }
 
   .control-panel {
     align-content: start;
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
   }
 
   .gallery-strip {

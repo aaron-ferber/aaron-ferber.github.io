@@ -6,11 +6,33 @@ import {
   extractObjectId,
   extractSearchQuery,
   getCareActions,
+  getPetEvolution,
   getPetMood,
   normalizeMetObject,
 } from './metPetModel.js';
+import {
+  calculatePetHealth,
+  createMetricSettings,
+  getDefaultStats,
+  getMetricConfigs,
+  getPrimaryNudge,
+} from './healthModel.js';
+import {
+  getHealthPreset,
+  getHealthPresetOptions,
+} from './healthPresets.js';
+import {
+  classifyMotionSample,
+  classifyOrientationSample,
+  createReactionQueue,
+} from './motionInteractions.js';
+import {
+  getPetDesign,
+} from './petDesigns.js';
 
-const STORAGE_KEY = 'metagotchi-gallery-v1';
+const STORAGE_KEY = 'mochi-pulse-gallery-v1';
+const LEGACY_STORAGE_KEY = 'metagotchi-gallery-v1';
+const HEALTH_STORAGE_KEY = 'mochi-pulse-health-v1';
 const DEFAULT_OBJECT_ID = 436535;
 
 const fallbackObjects = {
@@ -36,13 +58,31 @@ const fallbackObjects = {
 
 const samplePrompts = [
   { label: 'Cypress', value: String(DEFAULT_OBJECT_ID), type: 'id' },
+  { label: 'Irises', value: 'irises van gogh', type: 'query' },
+  { label: 'Moonlight', value: 'moonlight landscape', type: 'query' },
   { label: 'Cat', value: 'cat', type: 'query' },
-  { label: 'Armor', value: 'armor', type: 'query' },
   { label: 'Blue vase', value: 'blue vase', type: 'query' },
+  { label: 'Armor', value: 'armor', type: 'query' },
 ];
 
 const careActions = getCareActions();
+const careButtonMeta = {
+  feed: { icon: '🍓', reaction: 'feed', message: 'Nom nom nom! Energy and happiness bloom.' },
+  play: { icon: '⚽', reaction: 'play', message: 'Mochi bounces through the gallery like a rubber ball.' },
+  conserve: { icon: '🧹', reaction: 'conserve', message: 'Tiny gloves, gentle brush, guardian sparkle.' },
+  study: { icon: '📚', reaction: 'study', message: 'New trait discovered: artwork curiosity unlocked.' },
+};
+const motionReactionMap = {
+  shake: { careAction: 'play', reaction: 'play', message: 'Shake play makes Mochi do a big happy bounce.' },
+  flip: { careAction: 'conserve', reaction: 'conserve', message: 'Upside-down time makes Mochi sparkle and reset.' },
+  'tilt-left': { careAction: 'study', reaction: 'study', message: 'Mochi leans left and notices a new detail.' },
+  'tilt-right': { careAction: 'study', reaction: 'study', message: 'Mochi leans right and studies the room.' },
+};
 const state = loadGallery();
+const healthState = loadHealthState();
+const motionQueue = createReactionQueue({ now: 0 });
+let reactionTimer;
+let motionEnabled = false;
 
 const nodes = {
   app: document.querySelector('#app'),
@@ -54,10 +94,12 @@ const nodes = {
   sampleRow: document.querySelector('#sample-row'),
   device: document.querySelector('#pet-device'),
   petArt: document.querySelector('#pet-art'),
+  reactionEffects: document.querySelector('#reaction-effects'),
   petName: document.querySelector('#pet-name'),
   petMood: document.querySelector('#pet-mood'),
   petLore: document.querySelector('#pet-lore'),
   petMessage: document.querySelector('#pet-message'),
+  strengthBadge: document.querySelector('#strength-badge'),
   artTitle: document.querySelector('#art-title'),
   artMeta: document.querySelector('#art-meta'),
   artTags: document.querySelector('#art-tags'),
@@ -65,6 +107,16 @@ const nodes = {
   careButtons: document.querySelector('#care-buttons'),
   meterList: document.querySelector('#meter-list'),
   gallery: document.querySelector('#gallery'),
+  healthForm: document.querySelector('#health-form'),
+  healthRing: document.querySelector('#health-ring'),
+  healthScore: document.querySelector('#health-score'),
+  healthNudge: document.querySelector('#health-nudge'),
+  healthMetricCards: document.querySelector('#health-metric-cards'),
+  healthPresets: document.querySelector('#health-presets'),
+  healthEnabledCount: document.querySelector('#health-enabled-count'),
+  healthPicker: document.querySelector('#health-picker'),
+  healthValues: document.querySelector('#health-values'),
+  motionButton: document.querySelector('#motion-button'),
 };
 
 renderSamples();
@@ -79,6 +131,15 @@ nodes.hatchForm.addEventListener('submit', async (event) => {
 
   await handleHatchInput(value);
 });
+
+nodes.healthForm.addEventListener('input', (event) => {
+  if (event.target.matches('[data-health-value]')) {
+    handleHealthInput(event);
+  }
+});
+
+nodes.healthForm.addEventListener('change', handleHealthInput);
+nodes.motionButton.addEventListener('click', enableMotionPlay);
 
 async function handleHatchInput(value) {
   const objectId = extractObjectId(value);
@@ -98,7 +159,7 @@ async function handleHatchInput(value) {
 
 async function ensureStarterPet() {
   if (state.activeId) return;
-  setStatus('Hatching a gallery pet from The Met collection...', 'loading');
+  setStatus('Hatching a soft starter pet from The Met collection...', 'loading');
   await adoptObject(DEFAULT_OBJECT_ID, { silent: true });
 }
 
@@ -114,7 +175,7 @@ async function adoptObject(objectId, options = {}) {
 
     state.petsById[pet.id] = {
       pet,
-      care: existing && existing.care ? existing.care : createInitialCareState(pet.id),
+      care: existing?.care ?? createInitialCareState(pet.id),
     };
 
     if (!state.adoptedOrder.includes(pet.id)) {
@@ -124,7 +185,8 @@ async function adoptObject(objectId, options = {}) {
 
     saveGallery();
     render();
-    setStatus(`${pet.name} joined the gallery.`, 'success');
+    setStatus(`${pet.name} joined the Mochi shelf.`, 'success');
+    triggerReaction('hatch', `${pet.name} bounced into the room.`);
     nodes.hatchInput.value = '';
     nodes.candidateList.innerHTML = '';
   } catch (error) {
@@ -151,7 +213,7 @@ async function searchObjects(query) {
 
     const candidates = await fetchCandidateObjects(ids);
     renderCandidates(candidates);
-    setStatus(`Choose one ${query} object to hatch.`, 'success');
+    setStatus(`Choose one ${query} object as Mochi's backdrop spirit.`, 'success');
   } catch (error) {
     setStatus(error.message, 'error');
   } finally {
@@ -186,30 +248,44 @@ async function fetchMetObject(objectId) {
 }
 
 function render() {
+  const healthResult = calculatePetHealth(healthState.stats, healthState.settings);
+  renderHealth(healthResult);
+
   const activeEntry = state.petsById[state.activeId];
   nodes.app.dataset.empty = activeEntry ? 'false' : 'true';
 
   if (!activeEntry) {
-    renderEmptyPet();
+    renderEmptyPet(healthResult);
     renderGallery();
     return;
   }
 
   const { pet, care } = activeEntry;
   const mood = getPetMood(care);
+  const evolution = getPetEvolution(care, healthResult.score);
+  const design = getPetDesign({
+    id: `${pet.id}-${activeEntry.lookSeed ?? 0}`,
+    name: pet.name,
+    healthScore: healthResult.score,
+    evolutionId: evolution.id,
+  });
 
   nodes.device.style.setProperty('--pet-hue', pet.palette.hue);
   nodes.device.style.setProperty('--pet-accent', pet.palette.accent);
   nodes.device.style.setProperty('--pet-shadow', pet.palette.shadow);
   nodes.device.dataset.mood = mood.id;
   nodes.device.dataset.pattern = pet.shellPattern;
+  nodes.device.dataset.evolution = evolution.id;
+  nodes.device.dataset.designTier = design.tier;
+  applyLookDataset(design.parts);
 
   nodes.petName.textContent = pet.name;
-  nodes.petMood.textContent = mood.label;
+  nodes.petMood.textContent = `${mood.label} / ${healthResult.stage.label}`;
   nodes.petLore.textContent = pet.lore;
-  nodes.petMessage.textContent = care.lastMessage || mood.message;
+  nodes.petMessage.textContent = `${evolution.message} ${healthResult.stage.message}`;
+  nodes.strengthBadge.textContent = `${evolution.label} form - ${design.parts.body.label} - STR ${evolution.strength}`;
   nodes.artTitle.textContent = pet.title;
-  nodes.artMeta.textContent = [pet.artist, pet.date, pet.department].filter(Boolean).join(' · ');
+  nodes.artMeta.textContent = [pet.artist, pet.date, pet.department].filter(Boolean).join(' - ');
   nodes.metLink.href = pet.metUrl;
   nodes.metLink.textContent = `Met object ${pet.artworkId}`;
 
@@ -229,11 +305,26 @@ function render() {
   markFavoriteCare(pet.favoriteCare);
 }
 
-function renderEmptyPet() {
+function renderEmptyPet(healthResult) {
+  const emptyCare = createInitialCareState(0);
+  const evolution = getPetEvolution(emptyCare, healthResult.score);
+
+  nodes.device.dataset.mood = healthResult.stage.id === 'fragile' ? 'wilting' : 'steady';
+  nodes.device.dataset.pattern = 'brush';
+  nodes.device.dataset.evolution = evolution.id;
+  const design = getPetDesign({
+    id: 0,
+    name: 'Mochi',
+    healthScore: healthResult.score,
+    evolutionId: evolution.id,
+  });
+  nodes.device.dataset.designTier = design.tier;
+  applyLookDataset(design.parts);
   nodes.petName.textContent = 'Awaiting hatch';
-  nodes.petMood.textContent = 'Dormant';
+  nodes.petMood.textContent = healthResult.stage.label;
   nodes.petLore.textContent = 'Choose a Met object to wake the first pet.';
-  nodes.petMessage.textContent = 'The gallery shelf is empty.';
+  nodes.petMessage.textContent = 'Hatch a Met backdrop, then keep Mochi strong with care and health signals.';
+  nodes.strengthBadge.textContent = `${evolution.label} form - STR ${evolution.strength}`;
   nodes.artTitle.textContent = 'No artwork selected';
   nodes.artMeta.textContent = '';
   nodes.artTags.innerHTML = '';
@@ -241,7 +332,7 @@ function renderEmptyPet() {
   nodes.petArt.removeAttribute('src');
   nodes.metLink.removeAttribute('href');
   nodes.metLink.textContent = 'The Met';
-  renderMeters(createInitialCareState(0));
+  renderMeters(emptyCare);
 }
 
 function renderSamples() {
@@ -268,20 +359,34 @@ function renderCareButtons() {
   nodes.careButtons.innerHTML = Object.entries(careActions)
     .map(([id, action]) => `
       <button type="button" data-care-action="${id}">
+        <span aria-hidden="true">${careButtonMeta[id]?.icon ?? '✨'}</span>
         <span>${escapeHtml(action.label)}</span>
       </button>
     `)
-    .join('');
+    .join('')
+    + '<button type="button" data-resample-look><span aria-hidden="true">🎲</span><span>Resample</span></button>';
 
-  nodes.careButtons.querySelectorAll('button').forEach((button) => {
+  nodes.careButtons.querySelectorAll('[data-care-action]').forEach((button) => {
     button.addEventListener('click', () => {
       const activeEntry = state.petsById[state.activeId];
       if (!activeEntry) return;
 
-      activeEntry.care = applyCareAction(activeEntry.care, button.dataset.careAction);
+      const actionId = button.dataset.careAction;
+      activeEntry.care = applyCareAction(activeEntry.care, actionId);
       saveGallery();
       render();
+      triggerReaction(careButtonMeta[actionId]?.reaction ?? actionId, careButtonMeta[actionId]?.message ?? activeEntry.care.lastMessage);
     });
+  });
+
+  nodes.careButtons.querySelector('[data-resample-look]').addEventListener('click', () => {
+    const activeEntry = state.petsById[state.activeId];
+    if (!activeEntry) return;
+
+    activeEntry.lookSeed = ((activeEntry.lookSeed ?? 0) + 1) % 997;
+    saveGallery();
+    render();
+    triggerReaction('hatch', 'Mochi tries a fresh tiny form.');
   });
 }
 
@@ -308,6 +413,279 @@ function renderCandidates(candidates) {
   });
 }
 
+function renderHealth(healthResult) {
+  const configs = getMetricConfigs(healthState.settings);
+  const activeCount = Object.values(configs).filter((config) => config.enabled).length;
+
+  nodes.healthRing.style.setProperty('--score', healthResult.score);
+  nodes.healthRing.dataset.stage = healthResult.stage.id;
+  nodes.healthScore.textContent = String(healthResult.score);
+  nodes.healthNudge.textContent = `${healthResult.stage.message} ${getPrimaryNudge(healthResult)}`;
+  nodes.healthEnabledCount.textContent = `${activeCount} active`;
+
+  renderHealthMetricCards(healthResult);
+  renderHealthPresets();
+  renderHealthPicker(configs);
+  renderHealthValues(configs);
+}
+
+function renderHealthMetricCards(healthResult) {
+  const metricEntries = Object.entries(healthResult.breakdown);
+
+  if (!metricEntries.length) {
+    nodes.healthMetricCards.innerHTML = '<p class="health-nudge">No stats selected yet.</p>';
+    return;
+  }
+
+  nodes.healthMetricCards.innerHTML = metricEntries
+    .map(([key, metric]) => `
+      <article class="health-mini-card ${metric.status === 'watch' ? 'watch' : ''}">
+        <h3>${escapeHtml(metric.label)}</h3>
+        <p>${escapeHtml(formatGoal(metric))}</p>
+        <strong>${escapeHtml(formatMetricValue(metric.value, metric.unit))}</strong>
+        <div class="health-bar" aria-hidden="true"><i style="--progress: ${Math.round(metric.progress * 100)}%"></i></div>
+      </article>
+    `)
+    .join('');
+}
+
+function renderHealthPresets() {
+  nodes.healthPresets.innerHTML = getHealthPresetOptions()
+    .map((preset) => `
+      <button
+        type="button"
+        data-health-preset="${preset.id}"
+        data-tone="${preset.tone}"
+        aria-pressed="${healthState.lastPreset === preset.id ? 'true' : 'false'}"
+      >
+        ${escapeHtml(preset.label)}
+      </button>
+    `)
+    .join('');
+
+  nodes.healthPresets.querySelectorAll('[data-health-preset]').forEach((button) => {
+    button.addEventListener('click', () => applyHealthPreset(button.dataset.healthPreset));
+  });
+}
+
+function renderHealthPicker(configs) {
+  nodes.healthPicker.innerHTML = Object.entries(configs)
+    .map(([key, config]) => `
+      <label class="health-option">
+        <span class="health-option-main">
+          <input
+            type="checkbox"
+            data-health-enabled="${key}"
+            ${config.enabled ? 'checked' : ''}
+          />
+          <span>
+            <strong>${escapeHtml(config.shortLabel)}</strong>
+            <small>${escapeHtml(config.category)}</small>
+          </span>
+        </span>
+        <span class="goal-field">
+          <input
+            type="number"
+            min="${config.min}"
+            max="${config.max}"
+            step="${config.step}"
+            value="${escapeAttribute(config.target)}"
+            data-health-target="${key}"
+            aria-label="${escapeAttribute(`${config.label} goal`)}"
+          />
+          <small>${config.direction === 'lower' ? 'Goal below' : 'Goal'}</small>
+        </span>
+      </label>
+    `)
+    .join('');
+}
+
+function renderHealthValues(configs) {
+  const activeEntries = Object.entries(configs).filter(([, config]) => config.enabled);
+
+  nodes.healthValues.innerHTML = activeEntries
+    .map(([key, config]) => {
+      const value = getHealthValue(config);
+      return `
+        <div class="health-control-row">
+          <label for="health-value-${key}">${escapeHtml(config.shortLabel)}</label>
+          <output for="health-value-${key}">${escapeHtml(formatMetricValue(value, config.unit))}</output>
+          <input
+            id="health-value-${key}"
+            type="range"
+            min="${config.min}"
+            max="${config.max}"
+            step="${config.step}"
+            value="${escapeAttribute(value)}"
+            data-health-value="${key}"
+          />
+        </div>
+      `;
+    })
+    .join('');
+}
+
+function handleHealthInput(event) {
+  const target = event.target;
+  if (!target.matches('[data-health-enabled], [data-health-target], [data-health-value]')) return;
+
+  const configs = getMetricConfigs(healthState.settings);
+
+  if (target.matches('[data-health-enabled]')) {
+    const key = target.dataset.healthEnabled;
+    healthState.settings[key].enabled = target.checked;
+  }
+
+  if (target.matches('[data-health-target]')) {
+    const key = target.dataset.healthTarget;
+    const config = configs[key];
+    if (config) {
+      healthState.settings[key].target = clampNumber(Number(target.value), config.min, config.max, config.defaultTarget);
+    }
+  }
+
+  if (target.matches('[data-health-value]')) {
+    const key = target.dataset.healthValue;
+    const config = configs[key];
+    if (config) {
+      healthState.stats[config.sourceKey] = clampNumber(Number(target.value), config.min, config.max, config.defaultValue);
+    }
+  }
+
+  healthState.lastPreset = 'custom';
+  saveHealthState();
+  render();
+  triggerReaction('health', 'Mochi listens to the new health signal.');
+}
+
+function applyHealthPreset(presetId) {
+  const preset = getHealthPreset(presetId);
+  healthState.stats = {
+    ...healthState.stats,
+    ...preset.stats,
+  };
+  healthState.lastPreset = preset.id;
+  saveHealthState();
+  render();
+
+  const reaction = preset.id === 'active'
+    ? 'health-boost'
+    : preset.id === 'lazy'
+      ? 'sleepy'
+      : 'health';
+  triggerReaction(reaction, preset.message, 1800);
+}
+
+async function enableMotionPlay() {
+  if (motionEnabled) {
+    triggerReaction('health', 'Motion play is already listening.');
+    return;
+  }
+
+  try {
+    const motionPermission = await requestSensorPermission(window.DeviceMotionEvent);
+    const orientationPermission = await requestSensorPermission(window.DeviceOrientationEvent);
+    if (motionPermission === 'denied' || orientationPermission === 'denied') {
+      setStatus('Motion access was not allowed. Buttons and sliders still work.', 'error');
+      return;
+    }
+
+    window.addEventListener('devicemotion', handleDeviceMotion);
+    window.addEventListener('deviceorientation', handleDeviceOrientation);
+    motionEnabled = true;
+    nodes.motionButton.textContent = 'Motion play active';
+    nodes.motionButton.disabled = true;
+    setStatus('Motion play is active: shake, tilt, or flip the phone to play with Mochi.', 'success');
+    triggerReaction('play', 'Mochi is ready for shake and tilt play.');
+  } catch {
+    setStatus('Motion sensors are unavailable in this browser. Buttons and sliders still work.', 'error');
+  }
+}
+
+async function requestSensorPermission(eventClass) {
+  if (!eventClass?.requestPermission) return 'granted';
+  return eventClass.requestPermission();
+}
+
+function handleDeviceMotion(event) {
+  const acceleration = event.accelerationIncludingGravity ?? event.acceleration;
+  if (!acceleration) return;
+
+  const reaction = motionQueue.push(classifyMotionSample({
+    x: acceleration.x,
+    y: acceleration.y,
+    z: acceleration.z,
+    interval: event.interval,
+  }), performance.now());
+  applyMotionReaction(reaction);
+}
+
+function handleDeviceOrientation(event) {
+  const reaction = motionQueue.push(classifyOrientationSample({
+    beta: event.beta,
+    gamma: event.gamma,
+  }), performance.now());
+  applyMotionReaction(reaction);
+}
+
+function applyMotionReaction(motionReaction) {
+  const mapped = motionReactionMap[motionReaction?.action];
+  if (!mapped) return;
+
+  const activeEntry = state.petsById[state.activeId];
+  if (activeEntry) {
+    activeEntry.care = applyCareAction(activeEntry.care, mapped.careAction);
+    saveGallery();
+    render();
+  }
+  triggerReaction(mapped.reaction, mapped.message);
+}
+
+function triggerReaction(reaction, message, duration = 1200) {
+  nodes.device.dataset.reaction = reaction;
+  renderReactionEffects(reaction);
+  if (message) nodes.petMessage.textContent = message;
+  clearTimeout(reactionTimer);
+  reactionTimer = setTimeout(() => {
+    delete nodes.device.dataset.reaction;
+    nodes.reactionEffects.innerHTML = '';
+  }, duration);
+}
+
+function renderReactionEffects(reaction) {
+  const effects = {
+    feed: ['🍓', '🍪', '✨', '💗', '🍓'],
+    play: ['⚽', '🦋', '♫', '✨', '💫'],
+    study: ['🔎', '📚', '💡', '✨', '👀'],
+    conserve: ['🧹', '✨', '🏛️', '🌟', '🧤'],
+    hatch: ['🌈', '✨', '🖼️', '💫', '🌱'],
+    health: ['💓', '✨', '🌿', '💫', '💓'],
+    'health-boost': ['🌈', '⭐', '💪', '✨', '🏛️'],
+    sleepy: ['💤', '🌙', '🥺', '☁️', '💤'],
+  }[reaction] ?? ['✨', '💫', '⭐'];
+
+  nodes.reactionEffects.innerHTML = effects
+    .map((effect, index) => `<span style="--i: ${index}">${effect}</span>`)
+    .join('');
+}
+
+function applyLookDataset(parts) {
+  const datasetMap = {
+    body: parts.body?.id,
+    ears: parts.ears?.id,
+    arms: parts.arms?.id,
+    feet: parts.feet?.id,
+    eyes: parts.eyes?.id,
+    cheeks: parts.cheeks?.id,
+    tuft: parts.tuft?.id,
+    accessory: parts.accessory?.id,
+  };
+
+  Object.entries(datasetMap).forEach(([key, value]) => {
+    if (value) nodes.device.dataset[key] = value;
+  });
+}
+
 function renderMeters(care) {
   const meters = [
     ['hunger', 'Fed'],
@@ -318,16 +696,40 @@ function renderMeters(care) {
 
   nodes.meterList.innerHTML = meters
     .map(([key, label]) => {
-      const value = typeof care[key] === 'number' ? care[key] : 0;
+      const value = care[key] ?? 0;
+      const emotion = getCareEmotion(key, value);
       return `
-        <div class="meter">
-          <span>${label}</span>
-          <div class="meter-track" aria-hidden="true"><i style="width: ${value}%"></i></div>
-          <output>${Math.round(value)}</output>
+        <div class="meter emotion-chip" data-state="${emotion.state}">
+          <span class="emotion-face" aria-hidden="true">${emotion.face}</span>
+          <span>
+            <strong>${label}</strong>
+            <small>${emotion.label}</small>
+          </span>
         </div>
       `;
     })
     .join('');
+}
+
+function getCareEmotion(key, value) {
+  if (key === 'hunger') {
+    if (value >= 82) return { state: 'happy', face: '😋', label: 'Full' };
+    if (value >= 48) return { state: 'curious', face: '😊', label: 'Snacky' };
+    return { state: 'hungry', face: '🥺', label: 'Hungry' };
+  }
+  if (key === 'joy') {
+    if (value >= 82) return { state: 'excited', face: '🤩', label: 'Excited' };
+    if (value >= 48) return { state: 'happy', face: '😊', label: 'Happy' };
+    return { state: 'sleepy', face: '😴', label: 'Low play' };
+  }
+  if (key === 'shine') {
+    if (value >= 82) return { state: 'proud', face: '😎', label: 'Proud' };
+    if (value >= 48) return { state: 'inspired', face: '✨', label: 'Glowing' };
+    return { state: 'sleepy', face: '😴', label: 'Dusty' };
+  }
+  if (value >= 82) return { state: 'inspired', face: '✨', label: 'Inspired' };
+  if (value >= 48) return { state: 'curious', face: '👀', label: 'Curious' };
+  return { state: 'hungry', face: '🥺', label: 'Bored' };
 }
 
 function renderTags(pet) {
@@ -361,7 +763,7 @@ function renderGallery() {
           ${renderThumbnail(entry.pet.imageUrl)}
           <span>
             <strong>${escapeHtml(entry.pet.name)}</strong>
-            <small>${escapeHtml(mood.label)} · ${escapeHtml(entry.pet.department)}</small>
+            <small>${escapeHtml(mood.label)} - ${escapeHtml(entry.pet.department)}</small>
           </span>
         </button>
       `;
@@ -390,15 +792,16 @@ function markFavoriteCare(favoriteCare) {
 
 function loadGallery() {
   try {
-    const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved && saved.petsById && Array.isArray(saved.adoptedOrder)) {
+    const raw = localStorage.getItem(STORAGE_KEY) ?? localStorage.getItem(LEGACY_STORAGE_KEY);
+    const saved = JSON.parse(raw);
+    if (saved?.petsById && Array.isArray(saved.adoptedOrder)) {
       return {
-        activeId: saved.activeId != null ? saved.activeId : (saved.adoptedOrder[0] || null),
+        activeId: saved.activeId ?? saved.adoptedOrder[0] ?? null,
         petsById: saved.petsById,
         adoptedOrder: saved.adoptedOrder,
       };
     }
-  } catch (error) {
+  } catch {
     localStorage.removeItem(STORAGE_KEY);
   }
 
@@ -413,9 +816,68 @@ function saveGallery() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function loadHealthState() {
+  const defaults = {
+    stats: getDefaultStats(),
+    settings: createMetricSettings(),
+  };
+
+  try {
+    const saved = JSON.parse(localStorage.getItem(HEALTH_STORAGE_KEY));
+    if (!saved) return defaults;
+
+    return {
+      stats: {
+        ...defaults.stats,
+        ...sanitizeStats(saved.stats),
+      },
+      settings: createMetricSettings(saved.settings ?? {}),
+    };
+  } catch {
+    localStorage.removeItem(HEALTH_STORAGE_KEY);
+    return defaults;
+  }
+}
+
+function saveHealthState() {
+  localStorage.setItem(HEALTH_STORAGE_KEY, JSON.stringify(healthState));
+}
+
+function sanitizeStats(stats) {
+  return Object.fromEntries(
+    Object.entries(stats ?? {}).filter(([, value]) => Number.isFinite(value)),
+  );
+}
+
+function getHealthValue(config) {
+  const value = healthState.stats[config.sourceKey];
+  return Number.isFinite(value) ? value : config.defaultValue;
+}
+
+function formatGoal(metric) {
+  const comparison = metric.direction === 'lower' ? 'Goal below' : 'Goal';
+  return `${comparison} ${formatMetricValue(metric.target, metric.unit)}`;
+}
+
+function formatMetricValue(value, unit = '') {
+  const options = Number.isInteger(value)
+    ? { maximumFractionDigits: 0 }
+    : { maximumFractionDigits: 1 };
+  const formatted = new Intl.NumberFormat('en-US', options).format(value);
+  return unit ? `${formatted}${unit}` : formatted;
+}
+
+function clampNumber(value, min, max, fallback) {
+  if (!Number.isFinite(value)) return fallback;
+  return Math.min(Math.max(value, min), max);
+}
+
 function setBusy(isBusy) {
   nodes.hatchButton.disabled = isBusy;
   nodes.hatchInput.disabled = isBusy;
+  nodes.sampleRow.querySelectorAll('button').forEach((button) => {
+    button.disabled = isBusy;
+  });
 }
 
 function setStatus(message, tone = 'neutral') {
@@ -425,13 +887,13 @@ function setStatus(message, tone = 'neutral') {
 
 function escapeHtml(value) {
   return String(value)
-    .split('&').join('&amp;')
-    .split('<').join('&lt;')
-    .split('>').join('&gt;')
-    .split('"').join('&quot;')
-    .split("'").join('&#039;');
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
 }
 
 function escapeAttribute(value) {
-  return escapeHtml(value).split('`').join('&#096;');
+  return escapeHtml(value).replaceAll('`', '&#096;');
 }

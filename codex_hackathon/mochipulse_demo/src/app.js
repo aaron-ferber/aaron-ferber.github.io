@@ -117,14 +117,8 @@ const nodes = {
   healthPicker: document.querySelector('#health-picker'),
   healthValues: document.querySelector('#health-values'),
   motionButton: document.querySelector('#motion-button'),
-  menuButton: document.querySelector('#menu-button'),
-  drawerScrim: document.querySelector('#drawer-scrim'),
-  drawerClose: document.querySelector('#drawer-close'),
-  controlsPanel: document.querySelector('#controls-panel'),
 };
-const mobileDrawerQuery = window.matchMedia('(max-width: 920px)');
 
-setControlsOpen(false);
 renderSamples();
 renderCareButtons();
 render();
@@ -146,26 +140,6 @@ nodes.healthForm.addEventListener('input', (event) => {
 
 nodes.healthForm.addEventListener('change', handleHealthInput);
 nodes.motionButton.addEventListener('click', enableMotionPlay);
-nodes.menuButton.addEventListener('click', () => {
-  const shouldOpen = nodes.app.dataset.controlsOpen !== 'true';
-  setControlsOpen(shouldOpen, { focusClose: shouldOpen });
-});
-nodes.drawerClose.addEventListener('click', () => setControlsOpen(false, { restoreFocus: true }));
-nodes.drawerScrim.addEventListener('click', () => setControlsOpen(false, { restoreFocus: true }));
-document.addEventListener('keydown', (event) => {
-  if (event.key === 'Escape' && nodes.app.dataset.controlsOpen === 'true') {
-    setControlsOpen(false, { restoreFocus: true });
-  }
-});
-if (mobileDrawerQuery.addEventListener) {
-  mobileDrawerQuery.addEventListener('change', (event) => {
-    if (!event.matches) setControlsOpen(false);
-  });
-} else {
-  mobileDrawerQuery.addListener((event) => {
-    if (!event.matches) setControlsOpen(false);
-  });
-}
 
 async function handleHatchInput(value) {
   const objectId = extractObjectId(value);
@@ -213,7 +187,6 @@ async function adoptObject(objectId, options = {}) {
     render();
     setStatus(`${pet.name} joined the Mochi shelf.`, 'success');
     triggerReaction('hatch', `${pet.name} bounced into the room.`);
-    maybeCloseControlsDrawer();
     nodes.hatchInput.value = '';
     nodes.candidateList.innerHTML = '';
   } catch (error) {
@@ -601,34 +574,6 @@ function applyHealthPreset(presetId) {
       ? 'sleepy'
       : 'health';
   triggerReaction(reaction, preset.message, 1800);
-  maybeCloseControlsDrawer();
-}
-
-function setControlsOpen(isOpen, options = {}) {
-  const open = Boolean(isOpen);
-  nodes.app.dataset.controlsOpen = open ? 'true' : 'false';
-  document.body.dataset.drawerOpen = open ? 'true' : 'false';
-  nodes.menuButton.setAttribute('aria-expanded', String(open));
-  nodes.menuButton.setAttribute('aria-label', open ? 'Close stats and settings' : 'Open stats and settings');
-  nodes.drawerScrim.toggleAttribute('hidden', !open);
-
-  if (open) {
-    nodes.controlsPanel.scrollTop = 0;
-  }
-
-  if (open && options.focusClose) {
-    nodes.drawerClose.focus({ preventScroll: true });
-  }
-
-  if (!open && options.restoreFocus) {
-    nodes.menuButton.focus({ preventScroll: true });
-  }
-}
-
-function maybeCloseControlsDrawer() {
-  if (mobileDrawerQuery.matches && nodes.app.dataset.controlsOpen === 'true') {
-    setControlsOpen(false);
-  }
 }
 
 async function enableMotionPlay() {
