@@ -513,7 +513,7 @@ window.addEventListener("offline", () => {
 });
 
 async function start() {
-  await registerServiceWorker();
+  registerServiceWorker();
   renderExamples();
   await renderShelf();
   if (await loadHashPayload()) return;
