@@ -114,7 +114,7 @@ async function adoptObject(objectId, options = {}) {
 
     state.petsById[pet.id] = {
       pet,
-      care: existing?.care ?? createInitialCareState(pet.id),
+      care: existing && existing.care ? existing.care : createInitialCareState(pet.id),
     };
 
     if (!state.adoptedOrder.includes(pet.id)) {
@@ -318,7 +318,7 @@ function renderMeters(care) {
 
   nodes.meterList.innerHTML = meters
     .map(([key, label]) => {
-      const value = care[key] ?? 0;
+      const value = typeof care[key] === 'number' ? care[key] : 0;
       return `
         <div class="meter">
           <span>${label}</span>
@@ -391,9 +391,9 @@ function markFavoriteCare(favoriteCare) {
 function loadGallery() {
   try {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
-    if (saved?.petsById && Array.isArray(saved.adoptedOrder)) {
+    if (saved && saved.petsById && Array.isArray(saved.adoptedOrder)) {
       return {
-        activeId: saved.activeId ?? saved.adoptedOrder[0] ?? null,
+        activeId: saved.activeId != null ? saved.activeId : (saved.adoptedOrder[0] || null),
         petsById: saved.petsById,
         adoptedOrder: saved.adoptedOrder,
       };
@@ -425,13 +425,13 @@ function setStatus(message, tone = 'neutral') {
 
 function escapeHtml(value) {
   return String(value)
-    .replaceAll('&', '&amp;')
-    .replaceAll('<', '&lt;')
-    .replaceAll('>', '&gt;')
-    .replaceAll('"', '&quot;')
-    .replaceAll("'", '&#039;');
+    .split('&').join('&amp;')
+    .split('<').join('&lt;')
+    .split('>').join('&gt;')
+    .split('"').join('&quot;')
+    .split("'").join('&#039;');
 }
 
 function escapeAttribute(value) {
-  return escapeHtml(value).replaceAll('`', '&#096;');
+  return escapeHtml(value).split('`').join('&#096;');
 }
