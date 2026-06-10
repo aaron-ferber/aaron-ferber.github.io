@@ -1,5 +1,75 @@
 export const EXAMPLE_CARTRIDGES = [
   {
+    title: "2048",
+    tagline: "Swipe tiles, merge powers of two.",
+    payloadPath: "./cartridges/2048.html",
+  },
+  {
+    title: "Snake",
+    tagline: "Swipe to steer, eat apples, dodge yourself.",
+    payloadPath: "./cartridges/snake.html",
+  },
+  {
+    title: "One-tap Runner",
+    tagline: "Tap to jump, clear obstacles, push the run.",
+    payloadPath: "./cartridges/runner.html",
+  },
+  {
+    title: "Minesweeper",
+    tagline: "Tap safe cells, flag mines, clear the board.",
+    payloadPath: "./cartridges/minesweeper.html",
+  },
+  {
+    title: "Tetris",
+    tagline: "Drop tetrominoes, clear lines, chase the stack.",
+    payloadPath: "./cartridges/tetris.html",
+  },
+  {
+    title: "Swipe Decks",
+    tagline: "Swipe a tiny deck and get ranked picks.",
+    payloadPath: "./cartridges/swipe_deck.html",
+  },
+  {
+    title: "Rentle",
+    tagline: "Guess the rent from listing clues.",
+    payloadPath: "./cartridges/rentle.html",
+  },
+  {
+    title: "Price Is Wrong",
+    tagline: "Guess the civic contract sticker shock.",
+    payloadPath: "./cartridges/price_is_wrong.html",
+  },
+  {
+    title: "Payroll Tab",
+    tagline: "Guess the public payroll total.",
+    payloadPath: "./cartridges/payroll_tab.html",
+  },
+  {
+    title: "Chargemaster Roulette",
+    tagline: "Guess the hospital price spread.",
+    payloadPath: "./cartridges/chargemaster_roulette.html",
+  },
+  {
+    title: "Menus of New York",
+    tagline: "Guess the year from old menu clues.",
+    payloadPath: "./cartridges/menus_of_new_york.html",
+  },
+  {
+    title: "Hydrant Index: Jackpot",
+    tagline: "Guess the ticket haul at the curb.",
+    payloadPath: "./cartridges/hydrant_index.html",
+  },
+  {
+    title: "Who Said It?",
+    tagline: "Match the quote to the archetype.",
+    payloadPath: "./cartridges/who_said_it.html",
+  },
+  {
+    title: "Group Table",
+    tagline: "Pick the table nobody hates.",
+    payloadPath: "./cartridges/group_table.html",
+  },
+  {
     title: "StoopSwipe",
     tagline: "Grab curb finds before your tote fills up.",
     payload: `<!doctype html>

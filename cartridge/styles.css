@@ -113,7 +113,10 @@ p {
 .layout {
   display: grid;
   gap: 16px;
-  grid-template-columns: minmax(260px, 360px) minmax(260px, 360px) minmax(420px, 1fr);
+  grid-template-columns: minmax(260px, 360px) minmax(260px, 360px) minmax(
+      420px,
+      1fr
+    );
   padding: 18px clamp(12px, 3vw, 32px) 32px;
 }
 

@@ -1,0 +1,518 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>One-tap Runner</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: #18201c;
+      color: #122018;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(430px, 100%);
+      padding: 14px;
+      border: 1px solid #b8c7bd;
+      border-radius: 8px;
+      background: #f6f8f4;
+      box-shadow: 0 18px 42px #0009;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+      margin-bottom: 10px;
+    }
+    h1 {
+      margin: 0;
+      color: #0f1a14;
+      font-size: 30px;
+      line-height: 1;
+    }
+    .sub {
+      margin: 5px 0 0;
+      color: #53645a;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(55px, 1fr));
+      gap: 6px;
+      min-width: 190px;
+    }
+    .stat {
+      border-radius: 8px;
+      padding: 7px 8px;
+      background: #122018;
+      color: #f8fbf6;
+      text-align: center;
+    }
+    .label {
+      display: block;
+      color: #a7b8ae;
+      font-size: 9px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .value {
+      display: block;
+      margin-top: 2px;
+      font-size: 17px;
+      font-weight: 950;
+    }
+    .stage {
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      border: 1px solid #9aa89f;
+      border-radius: 8px;
+      background: #dceadf;
+      touch-action: manipulation;
+      user-select: none;
+      display: block;
+    }
+    .status {
+      min-height: 22px;
+      margin: 9px 0 10px;
+      color: #405046;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+      align-items: center;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #e6b84f;
+      color: #201806;
+      font: inherit;
+      font-weight: 900;
+      min-height: 40px;
+      padding: 9px 10px;
+    }
+    button.secondary {
+      background: #dfe7e2;
+      color: #132118;
+    }
+    .result {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #07100bbd;
+    }
+    .result[hidden] { display: none; }
+    .result-card {
+      width: min(350px, 100%);
+      border: 1px solid #e6b84f;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fbf6;
+      color: #132118;
+      box-shadow: 0 16px 38px #0009;
+    }
+    .result-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    .result-card p {
+      margin: 0 0 12px;
+      color: #314139;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    .result-card .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 58px;
+      margin-top: 10px;
+      border: 1px solid #bdc9c1;
+      border-radius: 8px;
+      padding: 8px;
+      background: #fff;
+      color: #132118;
+      font: inherit;
+      font-size: 13px;
+      font-weight: 750;
+      resize: none;
+    }
+    @media (max-width: 380px) {
+      main { padding: 10px; }
+      .top { display: grid; }
+      .stats { width: 100%; min-width: 0; }
+      h1 { font-size: 27px; }
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <h1>One-tap Runner</h1>
+        <p class="sub">Tap, click, or press Space to jump.</p>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="label">Distance</span>
+          <span class="value" id="distance">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Jumps</span>
+          <span class="value" id="jumps">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Cleared</span>
+          <span class="value" id="cleared">0</span>
+        </div>
+      </div>
+    </div>
+
+    <canvas class="stage" id="stage" width="400" height="300" aria-label="One-tap runner playfield"></canvas>
+    <p class="status" id="status">Ready.</p>
+
+    <div class="actions">
+      <button class="secondary" id="newGame" type="button">New</button>
+      <button id="jump" type="button">Jump</button>
+      <button class="secondary" id="finish" type="button">End</button>
+    </div>
+  </main>
+
+  <section class="result" id="result" hidden>
+    <div class="result-card">
+      <h2 id="resultTitle">Crash</h2>
+      <p id="resultText"></p>
+      <div class="row">
+        <button id="copyResult" type="button">Copy</button>
+        <button class="secondary" id="resultNewGame" type="button">New</button>
+      </div>
+      <textarea id="copyFallback" readonly></textarea>
+    </div>
+  </section>
+
+  <script>
+    const canvas = document.getElementById("stage");
+    const ctx = canvas.getContext("2d");
+    const distanceEl = document.getElementById("distance");
+    const jumpsEl = document.getElementById("jumps");
+    const clearedEl = document.getElementById("cleared");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const resultTitleEl = document.getElementById("resultTitle");
+    const resultTextEl = document.getElementById("resultText");
+    const copyFallbackEl = document.getElementById("copyFallback");
+
+    const width = 400;
+    const height = 300;
+    const groundY = 238;
+    const runner = { x: 66, width: 26, height: 34 };
+    const speed = 100;
+    const gravity = -880;
+    const jumpVelocity = 360;
+
+    let runnerY = 0;
+    let velocityY = 0;
+    let distance = 0;
+    let jumps = 0;
+    let cleared = 0;
+    let best = 0;
+    let spawnTimer = 1.05;
+    let obstacles = [];
+    let running = true;
+    let ended = false;
+    let shareText = "";
+    let lastTime = 0;
+    let manualClock = false;
+
+    function roundScore(value) {
+      return Math.max(0, Math.floor(value));
+    }
+
+    function resultLine() {
+      return "Runner distance " + roundScore(distance) + " | jumps " + jumps + " | cleared " + cleared;
+    }
+
+    function cloneObstacles(source) {
+      return source.map(function(obstacle) {
+        return {
+          x: obstacle.x,
+          width: obstacle.width,
+          height: obstacle.height,
+          counted: Boolean(obstacle.counted),
+        };
+      });
+    }
+
+    function runnerRect() {
+      return {
+        x: runner.x,
+        y: groundY - runner.height - runnerY,
+        width: runner.width,
+        height: runner.height,
+      };
+    }
+
+    function obstacleRect(obstacle) {
+      return {
+        x: obstacle.x,
+        y: groundY - obstacle.height,
+        width: obstacle.width,
+        height: obstacle.height,
+      };
+    }
+
+    function intersects(a, b) {
+      return a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y;
+    }
+
+    function spawnObstacle() {
+      const wave = Math.floor(distance / 170) % 3;
+      obstacles.push({
+        x: width + 18,
+        width: 22 + wave * 3,
+        height: 38 + wave * 6,
+        counted: false,
+      });
+      spawnTimer = 1.1 + (cleared % 3) * 0.18;
+    }
+
+    function finishGame(title) {
+      if (ended) return;
+      ended = true;
+      running = false;
+      shareText = resultLine();
+      if (roundScore(distance) > best) best = roundScore(distance);
+      resultTitleEl.textContent = title || "Crash";
+      resultTextEl.textContent = shareText;
+      copyFallbackEl.value = shareText;
+      resultEl.hidden = false;
+      statusEl.textContent = "Result ready.";
+      parent.postMessage({type:"cartridge-result", text: shareText}, "*");
+      render();
+    }
+
+    function jump() {
+      if (ended) return;
+      running = true;
+      velocityY = jumpVelocity;
+      jumps += 1;
+      statusEl.textContent = "Jump.";
+      render();
+    }
+
+    function tick(dt) {
+      const step = typeof dt === "number" ? dt : 1 / 60;
+      if (!running || ended) return getState();
+
+      distance += speed * step;
+      spawnTimer -= step;
+
+      velocityY += gravity * step;
+      runnerY += velocityY * step;
+      if (runnerY < 0) {
+        runnerY = 0;
+        velocityY = 0;
+      }
+
+      obstacles.forEach(function(obstacle) {
+        obstacle.x -= speed * step;
+        if (!obstacle.counted && obstacle.x + obstacle.width < runner.x) {
+          obstacle.counted = true;
+          cleared += 1;
+        }
+      });
+      obstacles = obstacles.filter(function(obstacle) {
+        return obstacle.x + obstacle.width > -10;
+      });
+
+      if (spawnTimer <= 0) spawnObstacle();
+
+      const body = runnerRect();
+      for (let index = 0; index < obstacles.length; index += 1) {
+        if (intersects(body, obstacleRect(obstacles[index]))) {
+          finishGame("Crash");
+          return getState();
+        }
+      }
+
+      render();
+      return getState();
+    }
+
+    function render() {
+      distanceEl.textContent = roundScore(distance);
+      jumpsEl.textContent = jumps;
+      clearedEl.textContent = cleared;
+
+      ctx.clearRect(0, 0, width, height);
+      const sky = ctx.createLinearGradient(0, 0, 0, groundY);
+      sky.addColorStop(0, "#b9d8df");
+      sky.addColorStop(1, "#eef5e8");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, width, groundY);
+
+      ctx.fillStyle = "#eff7ed";
+      ctx.fillRect(18, 52, 90, 18);
+      ctx.fillRect(248, 38, 118, 16);
+      ctx.fillStyle = "#c7d7cc";
+      for (let x = -60 + (roundScore(distance) % 90); x < width; x += 90) {
+        ctx.fillRect(x, groundY - 20, 42, 20);
+      }
+
+      ctx.fillStyle = "#314b38";
+      ctx.fillRect(0, groundY, width, height - groundY);
+      ctx.fillStyle = "#87a663";
+      ctx.fillRect(0, groundY, width, 7);
+
+      obstacles.forEach(function(obstacle) {
+        const rect = obstacleRect(obstacle);
+        ctx.fillStyle = "#9b3f34";
+        ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+        ctx.fillStyle = "#d96d49";
+        ctx.fillRect(rect.x + 4, rect.y + 4, rect.width - 8, 5);
+      });
+
+      const body = runnerRect();
+      ctx.fillStyle = ended ? "#69746e" : "#203b2a";
+      ctx.fillRect(body.x, body.y, body.width, body.height);
+      ctx.fillStyle = "#e6b84f";
+      ctx.fillRect(body.x + 5, body.y + 5, 8, 8);
+      ctx.fillStyle = "#f8fbf6";
+      ctx.fillRect(body.x + 18, body.y + 9, 4, 4);
+
+      ctx.fillStyle = "#18201c";
+      ctx.font = "700 12px system-ui, sans-serif";
+      ctx.fillText("Best " + best, 12, 22);
+    }
+
+    function gameLoop(time) {
+      if (!lastTime) lastTime = time;
+      const dt = Math.min(0.033, (time - lastTime) / 1000);
+      lastTime = time;
+      if (!manualClock) tick(dt);
+      requestAnimationFrame(gameLoop);
+    }
+
+    function copyResult() {
+      const text = shareText || resultLine();
+      copyFallbackEl.value = text;
+      copyFallbackEl.focus();
+      copyFallbackEl.select();
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          statusEl.textContent = "Copied.";
+        }, function() {
+          statusEl.textContent = "Copy from the box.";
+        });
+      } else {
+        statusEl.textContent = "Copy from the box.";
+      }
+    }
+
+    function newGame() {
+      runnerY = 0;
+      velocityY = 0;
+      distance = 0;
+      jumps = 0;
+      cleared = 0;
+      spawnTimer = 0.9;
+      obstacles = [{ x: width + 40, width: 24, height: 42, counted: false }];
+      running = true;
+      ended = false;
+      shareText = "";
+      resultEl.hidden = true;
+      copyFallbackEl.value = "";
+      statusEl.textContent = "Ready.";
+      lastTime = 0;
+      manualClock = false;
+      render();
+    }
+
+    function setState(nextState) {
+      runnerY = nextState.runnerY || 0;
+      velocityY = nextState.velocityY || 0;
+      distance = nextState.distance || 0;
+      jumps = nextState.jumps || 0;
+      cleared = nextState.cleared || 0;
+      spawnTimer = typeof nextState.spawnTimer === "number" ? nextState.spawnTimer : 99;
+      obstacles = cloneObstacles(nextState.obstacles || []);
+      running = nextState.running !== false;
+      ended = Boolean(nextState.ended);
+      shareText = "";
+      manualClock = nextState.manualClock !== false;
+      resultEl.hidden = true;
+      copyFallbackEl.value = "";
+      render();
+    }
+
+    function getState() {
+      return {
+        runnerY: Math.round(runnerY),
+        velocityY: Math.round(velocityY),
+        distance: roundScore(distance),
+        jumps: jumps,
+        cleared: cleared,
+        obstacles: cloneObstacles(obstacles),
+        running: running,
+        ended: ended,
+      };
+    }
+
+    document.getElementById("jump").addEventListener("click", jump);
+    document.getElementById("newGame").addEventListener("click", newGame);
+    document.getElementById("resultNewGame").addEventListener("click", newGame);
+    document.getElementById("finish").addEventListener("click", function() {
+      finishGame("Final run");
+    });
+    document.getElementById("copyResult").addEventListener("click", copyResult);
+
+    canvas.addEventListener("pointerdown", function(event) {
+      event.preventDefault();
+      event.stopPropagation();
+      jump();
+    });
+
+    document.addEventListener("keydown", function(event) {
+      if (event.code !== "Space" && event.key !== " ") return;
+      event.preventDefault();
+      jump();
+    });
+
+    document.addEventListener("pointerdown", function(event) {
+      if (event.target.closest("button") || event.target.closest(".result-card")) return;
+      jump();
+    });
+
+    window.__cartridgeRunner = {
+      setState: setState,
+      getState: getState,
+      jump: jump,
+      tick: tick,
+      finishGame: finishGame,
+    };
+
+    newGame();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>

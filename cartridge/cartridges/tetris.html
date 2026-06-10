@@ -1,0 +1,634 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tetris</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 12px;
+      background: #101620;
+      color: #101620;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(430px, 100%);
+      padding: 12px;
+      border: 1px solid #b7c5d6;
+      border-radius: 8px;
+      background: #f7f9fc;
+      box-shadow: 0 18px 40px #0008;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      color: #111827;
+      font-size: 36px;
+      line-height: 1;
+    }
+    .sub {
+      margin: 5px 0 0;
+      color: #536273;
+      font-size: 13px;
+      font-weight: 750;
+    }
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(58px, 1fr));
+      gap: 6px;
+      min-width: 196px;
+    }
+    .stat {
+      border-radius: 8px;
+      padding: 7px 8px;
+      background: #172033;
+      color: #f8fafc;
+      text-align: center;
+    }
+    .label {
+      display: block;
+      color: #9fb0c4;
+      font-size: 9px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .value {
+      display: block;
+      margin-top: 2px;
+      font-size: 17px;
+      font-weight: 950;
+      line-height: 1.1;
+    }
+    .board {
+      display: grid;
+      grid-template-columns: repeat(10, 1fr);
+      gap: 2px;
+      width: min(100%, 330px);
+      aspect-ratio: 1 / 2;
+      margin: 14px auto 10px;
+      padding: 6px;
+      border-radius: 8px;
+      background: #172033;
+      touch-action: none;
+      user-select: none;
+    }
+    .cell {
+      min-width: 0;
+      border-radius: 3px;
+      background: #233047;
+      box-shadow: inset 0 0 0 1px #ffffff0d;
+    }
+    .cell.filled {
+      box-shadow: inset 0 0 0 1px #ffffff5c, inset 0 -3px 0 #0002;
+    }
+    .cell.I { background: #22d3ee; }
+    .cell.J { background: #2563eb; }
+    .cell.L { background: #f97316; }
+    .cell.O { background: #facc15; }
+    .cell.S { background: #22c55e; }
+    .cell.T { background: #a855f7; }
+    .cell.Z { background: #ef4444; }
+    .status {
+      min-height: 21px;
+      margin: 0 0 10px;
+      color: #334155;
+      font-size: 14px;
+      font-weight: 800;
+      text-align: center;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #14b8a6;
+      color: #042f2e;
+      font: inherit;
+      font-weight: 900;
+      min-height: 40px;
+      padding: 9px 8px;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: #111827;
+    }
+    button.dark {
+      background: #172033;
+      color: #f8fafc;
+    }
+    .result {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #020617bd;
+    }
+    .result[hidden] { display: none; }
+    .result-card {
+      width: min(350px, 100%);
+      border: 1px solid #67e8f9;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fafc;
+      color: #111827;
+      box-shadow: 0 16px 38px #0008;
+    }
+    .result-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+      line-height: 1.1;
+    }
+    .result-card p {
+      margin: 0 0 12px;
+      color: #334155;
+      font-weight: 850;
+      line-height: 1.35;
+    }
+    .result-card .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 74px;
+      margin-top: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      font: inherit;
+      resize: none;
+    }
+    @media (max-width: 370px) {
+      main { padding: 10px; }
+      .top { display: grid; }
+      h1 { font-size: 32px; }
+      .stats { width: 100%; min-width: 0; }
+      .actions { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <h1>Tetris</h1>
+        <p class="sub">Tap to rotate. Swipe to move or drop.</p>
+      </div>
+      <div class="stats" aria-live="polite">
+        <div class="stat">
+          <span class="label">Score</span>
+          <span class="value" id="score">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Lines</span>
+          <span class="value" id="lines">0</span>
+        </div>
+        <div class="stat">
+          <span class="label">Level</span>
+          <span class="value" id="level">1</span>
+        </div>
+      </div>
+    </div>
+
+    <section class="board" id="board" aria-label="Tetris board"></section>
+    <p class="status" id="status">Ready.</p>
+
+    <div class="actions" aria-label="Game controls">
+      <button class="dark" id="left" type="button">Left</button>
+      <button class="dark" id="rotate" type="button">Rotate</button>
+      <button class="dark" id="right" type="button">Right</button>
+      <button id="drop" type="button">Drop</button>
+      <button class="secondary" id="newGame" type="button">New</button>
+      <button class="secondary" id="finish" type="button">End</button>
+    </div>
+  </main>
+
+  <section class="result" id="result" hidden>
+    <div class="result-card">
+      <h2 id="resultTitle">Game over</h2>
+      <p id="resultText"></p>
+      <div class="row">
+        <button id="copyResult" type="button">Copy</button>
+        <button class="secondary" id="resultNewGame" type="button">New</button>
+      </div>
+      <textarea id="copyFallback" readonly hidden></textarea>
+    </div>
+  </section>
+
+  <script>
+    const width = 10;
+    const height = 20;
+    const types = ["I", "J", "L", "O", "S", "T", "Z"];
+    const lineScores = [0, 100, 300, 500, 800];
+    const shapes = {
+      I: [
+        [[1, 0], [1, 1], [1, 2], [1, 3]],
+        [[0, 0], [1, 0], [2, 0], [3, 0]],
+        [[1, 0], [1, 1], [1, 2], [1, 3]],
+        [[0, 0], [1, 0], [2, 0], [3, 0]],
+      ],
+      J: [
+        [[0, 0], [1, 0], [1, 1], [1, 2]],
+        [[0, 1], [0, 2], [1, 1], [2, 1]],
+        [[1, 0], [1, 1], [1, 2], [2, 2]],
+        [[0, 1], [1, 1], [2, 0], [2, 1]],
+      ],
+      L: [
+        [[0, 2], [1, 0], [1, 1], [1, 2]],
+        [[0, 1], [1, 1], [2, 1], [2, 2]],
+        [[1, 0], [1, 1], [1, 2], [2, 0]],
+        [[0, 0], [0, 1], [1, 1], [2, 1]],
+      ],
+      O: [
+        [[0, 0], [0, 1], [1, 0], [1, 1]],
+        [[0, 0], [0, 1], [1, 0], [1, 1]],
+        [[0, 0], [0, 1], [1, 0], [1, 1]],
+        [[0, 0], [0, 1], [1, 0], [1, 1]],
+      ],
+      S: [
+        [[0, 1], [0, 2], [1, 0], [1, 1]],
+        [[0, 1], [1, 1], [1, 2], [2, 2]],
+        [[0, 1], [0, 2], [1, 0], [1, 1]],
+        [[0, 1], [1, 1], [1, 2], [2, 2]],
+      ],
+      T: [
+        [[0, 1], [1, 0], [1, 1], [1, 2]],
+        [[0, 1], [1, 1], [1, 2], [2, 1]],
+        [[1, 0], [1, 1], [1, 2], [2, 1]],
+        [[0, 1], [1, 0], [1, 1], [2, 1]],
+      ],
+      Z: [
+        [[0, 0], [0, 1], [1, 1], [1, 2]],
+        [[0, 2], [1, 1], [1, 2], [2, 1]],
+        [[0, 0], [0, 1], [1, 1], [1, 2]],
+        [[0, 2], [1, 1], [1, 2], [2, 1]],
+      ],
+    };
+
+    const boardEl = document.getElementById("board");
+    const scoreEl = document.getElementById("score");
+    const linesEl = document.getElementById("lines");
+    const levelEl = document.getElementById("level");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const resultTitleEl = document.getElementById("resultTitle");
+    const resultTextEl = document.getElementById("resultText");
+    const copyFallbackEl = document.getElementById("copyFallback");
+    const cells = [];
+
+    let board = emptyBoard();
+    let active = null;
+    let score = 0;
+    let clearedLines = 0;
+    let level = 1;
+    let ended = false;
+    let shareText = "";
+    let startX = 0;
+    let startY = 0;
+
+    function emptyBoard() {
+      return Array.from({ length: height }, function() {
+        return Array(width).fill(null);
+      });
+    }
+
+    function cloneBoard(source) {
+      return source.map(function(row) {
+        return row.map(function(cell) {
+          return cell || null;
+        });
+      });
+    }
+
+    function clonePiece(piece) {
+      if (!piece) return null;
+      return {
+        type: piece.type,
+        row: piece.row,
+        col: piece.col,
+        rotation: piece.rotation,
+      };
+    }
+
+    function randomType() {
+      return types[Math.floor(Math.random() * types.length)];
+    }
+
+    function makePiece(type) {
+      return {
+        type: type || randomType(),
+        row: 0,
+        col: type === "O" ? 4 : 3,
+        rotation: 0,
+      };
+    }
+
+    function pieceCells(piece) {
+      if (!piece) return [];
+      return shapes[piece.type][piece.rotation].map(function(offset) {
+        return {
+          row: piece.row + offset[0],
+          col: piece.col + offset[1],
+          type: piece.type,
+        };
+      });
+    }
+
+    function canPlace(piece, source) {
+      return pieceCells(piece).every(function(cell) {
+        if (cell.col < 0 || cell.col >= width) return false;
+        if (cell.row < 0 || cell.row >= height) return false;
+        return !source[cell.row][cell.col];
+      });
+    }
+
+    function visibleBoard() {
+      const next = cloneBoard(board);
+      pieceCells(active).forEach(function(cell) {
+        if (cell.row >= 0 && cell.row < height && cell.col >= 0 && cell.col < width) {
+          next[cell.row][cell.col] = cell.type;
+        }
+      });
+      return next;
+    }
+
+    function render() {
+      scoreEl.textContent = score;
+      linesEl.textContent = clearedLines;
+      levelEl.textContent = level;
+
+      visibleBoard().forEach(function(row, rowIndex) {
+        row.forEach(function(value, colIndex) {
+          const cell = cells[rowIndex * width + colIndex];
+          cell.className = value ? "cell filled " + value : "cell";
+          cell.setAttribute("aria-label", value ? value : "empty");
+        });
+      });
+    }
+
+    function resultLine() {
+      return "Tetris score " + score + " | lines " + clearedLines + " | level " + level;
+    }
+
+    function finishGame(title) {
+      ended = true;
+      shareText = resultLine();
+      resultTitleEl.textContent = title || "Game over";
+      resultTextEl.textContent = shareText;
+      copyFallbackEl.hidden = true;
+      copyFallbackEl.value = shareText;
+      resultEl.hidden = false;
+      statusEl.textContent = "Result ready.";
+      parent.postMessage({type:"cartridge-result", text: shareText}, "*");
+    }
+
+    function clearLines() {
+      const kept = board.filter(function(row) {
+        return !row.every(Boolean);
+      });
+      const cleared = height - kept.length;
+      while (kept.length < height) kept.unshift(Array(width).fill(null));
+      board = kept;
+      if (cleared) {
+        clearedLines += cleared;
+        score += lineScores[cleared] * level;
+        level = Math.floor(clearedLines / 10) + 1;
+      }
+      return cleared;
+    }
+
+    function spawn(type) {
+      if (ended) return false;
+      const piece = makePiece(type);
+      if (!canPlace(piece, board)) {
+        active = null;
+        render();
+        finishGame("Game over");
+        return false;
+      }
+      active = piece;
+      statusEl.textContent = "Piece " + piece.type + ".";
+      resultEl.hidden = true;
+      render();
+      return true;
+    }
+
+    function lockActive() {
+      if (!active) return 0;
+      pieceCells(active).forEach(function(cell) {
+        if (cell.row >= 0 && cell.row < height && cell.col >= 0 && cell.col < width) {
+          board[cell.row][cell.col] = cell.type;
+        }
+      });
+      active = null;
+      return clearLines();
+    }
+
+    function move(direction) {
+      if (ended || !active) return false;
+      const delta = {
+        left: [0, -1],
+        right: [0, 1],
+        down: [1, 0],
+      }[direction];
+      if (!delta) return false;
+      const next = clonePiece(active);
+      next.row += delta[0];
+      next.col += delta[1];
+      if (!canPlace(next, board)) {
+        if (direction === "down") {
+          const lines = lockActive();
+          statusEl.textContent = lines ? "Cleared " + lines + "." : "Locked.";
+          if (!ended) spawn();
+        }
+        render();
+        return false;
+      }
+      active = next;
+      statusEl.textContent = direction === "down" ? "Down." : "Moved.";
+      render();
+      return true;
+    }
+
+    function rotate() {
+      if (ended || !active) return false;
+      const offsets = [0, -1, 1, -2, 2];
+      for (let index = 0; index < offsets.length; index += 1) {
+        const next = clonePiece(active);
+        next.rotation = (next.rotation + 1) % 4;
+        next.col += offsets[index];
+        if (canPlace(next, board)) {
+          active = next;
+          statusEl.textContent = "Rotated.";
+          render();
+          return true;
+        }
+      }
+      statusEl.textContent = "Blocked.";
+      render();
+      return false;
+    }
+
+    function hardDrop() {
+      if (ended || !active) return { distance: 0, linesCleared: 0 };
+      let distance = 0;
+      const next = clonePiece(active);
+      while (canPlace(Object.assign({}, next, { row: next.row + 1 }), board)) {
+        next.row += 1;
+        distance += 1;
+      }
+      active = next;
+      const lines = lockActive();
+      statusEl.textContent = lines ? "Cleared " + lines + "." : "Dropped.";
+      if (!ended) spawn();
+      render();
+      return {
+        distance: distance,
+        linesCleared: lines,
+        score: score,
+        lines: clearedLines,
+        level: level,
+      };
+    }
+
+    function copyResult() {
+      const text = shareText || resultLine();
+      function fallback() {
+        copyFallbackEl.hidden = false;
+        copyFallbackEl.value = text;
+        copyFallbackEl.focus();
+        copyFallbackEl.select();
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          statusEl.textContent = "Copied.";
+        }, fallback);
+      } else {
+        fallback();
+      }
+    }
+
+    function newGame() {
+      board = emptyBoard();
+      active = null;
+      score = 0;
+      clearedLines = 0;
+      level = 1;
+      ended = false;
+      shareText = "";
+      resultEl.hidden = true;
+      copyFallbackEl.hidden = true;
+      statusEl.textContent = "Ready.";
+      spawn();
+      render();
+    }
+
+    function setState(nextState) {
+      board = cloneBoard(nextState.board || emptyBoard());
+      active = nextState.active ? clonePiece(nextState.active) : null;
+      score = nextState.score || 0;
+      clearedLines = nextState.lines || 0;
+      level = nextState.level || Math.floor(clearedLines / 10) + 1;
+      ended = Boolean(nextState.ended);
+      shareText = "";
+      resultEl.hidden = true;
+      copyFallbackEl.hidden = true;
+      render();
+    }
+
+    for (let index = 0; index < width * height; index += 1) {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      cell.setAttribute("role", "gridcell");
+      cells.push(cell);
+      boardEl.append(cell);
+    }
+
+    boardEl.addEventListener("pointerdown", function(event) {
+      startX = event.clientX;
+      startY = event.clientY;
+      boardEl.setPointerCapture(event.pointerId);
+    });
+
+    boardEl.addEventListener("pointerup", function(event) {
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      const distance = Math.max(Math.abs(dx), Math.abs(dy));
+      if (distance < 22) {
+        rotate();
+        return;
+      }
+      if (Math.abs(dx) > Math.abs(dy)) {
+        move(dx > 0 ? "right" : "left");
+      } else if (dy > 0) {
+        hardDrop();
+      } else {
+        rotate();
+      }
+    });
+
+    document.addEventListener("keydown", function(event) {
+      if (event.key === "ArrowLeft") {
+        event.preventDefault();
+        move("left");
+      } else if (event.key === "ArrowRight") {
+        event.preventDefault();
+        move("right");
+      } else if (event.key === "ArrowUp" || event.key === "z" || event.key === "Z") {
+        event.preventDefault();
+        rotate();
+      } else if (event.key === "ArrowDown" || event.key === " ") {
+        event.preventDefault();
+        hardDrop();
+      }
+    });
+
+    document.getElementById("left").addEventListener("click", function() { move("left"); });
+    document.getElementById("right").addEventListener("click", function() { move("right"); });
+    document.getElementById("rotate").addEventListener("click", rotate);
+    document.getElementById("drop").addEventListener("click", hardDrop);
+    document.getElementById("newGame").addEventListener("click", newGame);
+    document.getElementById("resultNewGame").addEventListener("click", newGame);
+    document.getElementById("finish").addEventListener("click", function() {
+      finishGame("Final score");
+    });
+    document.getElementById("copyResult").addEventListener("click", copyResult);
+
+    window.__cartridgeTetris = {
+      setState: setState,
+      getState: function() {
+        return {
+          board: cloneBoard(board),
+          active: clonePiece(active),
+          score: score,
+          lines: clearedLines,
+          level: level,
+          ended: ended,
+        };
+      },
+      spawn: spawn,
+      move: move,
+      rotate: rotate,
+      hardDrop: hardDrop,
+      finishGame: finishGame,
+    };
+
+    newGame();
+  </script>
+</body>
+</html>

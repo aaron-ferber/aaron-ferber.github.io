@@ -1,0 +1,488 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Swipe Decks</title>
+  <style>
+    * { box-sizing: border-box; }
+    html,
+    body {
+      height: 100%;
+      overflow: hidden;
+      overscroll-behavior: none;
+    }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      display: grid;
+      place-items: center;
+      padding: 14px;
+      background: #17201f;
+      color: #10201d;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    main {
+      width: min(430px, 100%);
+      padding: 14px;
+      border: 1px solid #b7d7cc;
+      border-radius: 8px;
+      background: #f7fbf8;
+      box-shadow: 0 18px 42px #0009;
+    }
+    .top {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      gap: 12px;
+    }
+    h1 {
+      margin: 0;
+      color: #10201d;
+      font-size: 32px;
+      line-height: 1;
+    }
+    .sub {
+      margin: 6px 0 0;
+      color: #52635c;
+      font-size: 13px;
+      font-weight: 800;
+    }
+    .stat {
+      min-width: 88px;
+      border-radius: 8px;
+      padding: 8px 10px;
+      background: #10201d;
+      color: #f8fafc;
+      text-align: center;
+    }
+    .label {
+      display: block;
+      color: #b7d7cc;
+      font-size: 10px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .value {
+      display: block;
+      margin-top: 2px;
+      font-size: 18px;
+      font-weight: 950;
+    }
+    .card {
+      min-height: 250px;
+      display: grid;
+      align-content: center;
+      gap: 10px;
+      margin: 16px 0 12px;
+      padding: 18px;
+      border: 1px solid #bfd0c8;
+      border-radius: 8px;
+      background: #ffffff;
+      touch-action: none;
+      user-select: none;
+      transition: transform 120ms ease;
+    }
+    .name {
+      color: #10201d;
+      font-size: 28px;
+      font-weight: 950;
+      line-height: 1.05;
+    }
+    .text {
+      min-height: 70px;
+      color: #33423c;
+      font-size: 18px;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .tags {
+      color: #6b7c73;
+      font-size: 12px;
+      font-weight: 850;
+      text-transform: uppercase;
+    }
+    .status {
+      min-height: 22px;
+      margin: 0 0 10px;
+      color: #33423c;
+      font-size: 14px;
+      font-weight: 800;
+    }
+    .actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 8px;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      background: #31c48d;
+      color: #052e23;
+      font: inherit;
+      font-weight: 900;
+      min-height: 42px;
+      padding: 10px;
+    }
+    button.secondary {
+      background: #e2e8f0;
+      color: #10201d;
+    }
+    button.pass {
+      background: #fed7aa;
+      color: #431407;
+    }
+    .result {
+      position: fixed;
+      inset: 0;
+      display: grid;
+      place-items: center;
+      padding: 18px;
+      background: #020617b8;
+    }
+    .result[hidden] { display: none; }
+    .result-card {
+      width: min(340px, 100%);
+      border: 1px solid #86efac;
+      border-radius: 8px;
+      padding: 16px;
+      background: #f8fafc;
+      color: #10201d;
+      box-shadow: 0 16px 38px #0008;
+    }
+    .result-card h2 {
+      margin: 0 0 8px;
+      font-size: 24px;
+    }
+    .result-card p {
+      margin: 0 0 12px;
+      color: #33423c;
+      font-weight: 800;
+      line-height: 1.35;
+    }
+    .result-card .row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+    textarea {
+      width: 100%;
+      height: 74px;
+      margin-top: 10px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px;
+      font: inherit;
+      resize: none;
+    }
+    @media (max-width: 360px) {
+      main { padding: 10px; }
+      .top { display: grid; }
+      .stat { width: 100%; }
+      .actions { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <div class="top">
+      <div>
+        <h1>Swipe Decks</h1>
+        <p class="sub">Teach the deck what you like.</p>
+      </div>
+      <div class="stat" aria-live="polite">
+        <span class="label">Swiped</span>
+        <span class="value" id="count">0</span>
+      </div>
+    </div>
+
+    <section class="card" id="card" aria-label="Swipe card">
+      <div class="name" id="name"></div>
+      <div class="text" id="text"></div>
+      <div class="tags" id="tags"></div>
+    </section>
+    <p class="status" id="status">Ready.</p>
+    <div class="actions">
+      <button class="pass" id="pass" type="button">Pass</button>
+      <button id="like" type="button">Like</button>
+      <button class="secondary" id="finish" type="button">End</button>
+    </div>
+  </main>
+
+  <section class="result" id="result" hidden>
+    <div class="result-card">
+      <h2 id="resultTitle">Ranked picks</h2>
+      <p id="resultText"></p>
+      <div class="row">
+        <button id="copyResult" type="button">Copy</button>
+        <button class="secondary" id="resultNewGame" type="button">New</button>
+      </div>
+      <textarea id="copyFallback" readonly hidden></textarea>
+    </div>
+  </section>
+
+  <script>
+    const defaultDeck = [
+      { id: "met", name: "Swipe the Met", text: "Fifteen rooms, one taste profile.", tags: ["art", "quiet"] },
+      { id: "stoop", name: "Stoop Finds", text: "A chair, a lamp, and one suspicious cord.", tags: ["finds", "weird"] },
+      { id: "lunch", name: "Lunch Signals", text: "Handwritten sign, steam in the window.", tags: ["food", "local"] },
+      { id: "table", name: "Group Table", text: "A dinner pick nobody hates.", tags: ["food", "group"] },
+      { id: "history", name: "Tiny History", text: "A street sign with a whole biography.", tags: ["history", "quiet"] },
+    ];
+
+    const nameEl = document.getElementById("name");
+    const textEl = document.getElementById("text");
+    const tagsEl = document.getElementById("tags");
+    const countEl = document.getElementById("count");
+    const statusEl = document.getElementById("status");
+    const resultEl = document.getElementById("result");
+    const resultTitleEl = document.getElementById("resultTitle");
+    const resultTextEl = document.getElementById("resultText");
+    const copyFallbackEl = document.getElementById("copyFallback");
+    const cardEl = document.getElementById("card");
+
+    let deck = [];
+    let current = 0;
+    let history = [];
+    let liked = [];
+    let tagScores = {};
+    let finished = false;
+    let shareText = "";
+    let startX = 0;
+    let startY = 0;
+    let activePointerId = null;
+
+    function normalizeDeck(source) {
+      if (!Array.isArray(source)) return [];
+      return source.map(function(item, index) {
+        const safeItem = item && typeof item === "object" ? item : {};
+        const hasDisplay = safeItem.name || safeItem.text;
+        if (!hasDisplay) return null;
+        const tags = Array.isArray(safeItem.tags)
+          ? safeItem.tags
+          : safeItem.tags
+            ? [safeItem.tags]
+            : [];
+        return {
+          id: safeItem.id ? String(safeItem.id) : "item-" + (index + 1),
+          name: safeItem.name ? String(safeItem.name) : "Untitled",
+          text: safeItem.text ? String(safeItem.text) : "",
+          tags: tags.map(function(tag) {
+            return String(tag);
+          }).filter(Boolean),
+        };
+      }).filter(Boolean);
+    }
+
+    function cloneDeck(source) {
+      return normalizeDeck(source);
+    }
+
+    function customDeckFromPage() {
+      if (Array.isArray(window.__cartridgeSwipeDeckItems)) {
+        return normalizeDeck(window.__cartridgeSwipeDeckItems);
+      }
+      const dataEl = document.getElementById("deck-data");
+      if (!dataEl) return [];
+      try {
+        return normalizeDeck(JSON.parse(dataEl.textContent || "[]"));
+      } catch (error) {
+        return [];
+      }
+    }
+
+    function resolvedDeck(source) {
+      const normalized = normalizeDeck(source);
+      return normalized.length ? normalized : cloneDeck(defaultDeck);
+    }
+
+    function loadDeck(items) {
+      setState({ deck: resolvedDeck(items) });
+      return getState();
+    }
+
+    function resetCardTransform() {
+      cardEl.style.transform = "";
+    }
+
+    function previewDrag(dx) {
+      const offset = Math.max(-80, Math.min(80, dx));
+      const rotate = Math.max(-8, Math.min(8, dx / 14));
+      cardEl.style.transform = "translateX(" + offset + "px) rotate(" + rotate + "deg)";
+    }
+
+    function scoreCard(item) {
+      if (!item.tags.length) return 0;
+      return item.tags.reduce(function(total, tag) {
+        return total + (tagScores[tag] || 0);
+      }, 0) / item.tags.length;
+    }
+
+    function ranking() {
+      return liked.slice().sort(function(a, b) {
+        return scoreCard(b) - scoreCard(a);
+      });
+    }
+
+    function resultLine() {
+      const ranked = ranking();
+      const top = ranked.length ? ranked[0].name : "none";
+      return "Swipe Decks liked " + liked.length + " | top " + top + " | swipes " + history.length;
+    }
+
+    function render() {
+      countEl.textContent = history.length + " / " + deck.length;
+      if (finished || current >= deck.length) {
+        const ranked = ranking();
+        nameEl.textContent = ranked.length ? "Your top pick: " + ranked[0].name : "No picks yet";
+        textEl.textContent = ranked.length ? ranked.map(function(item, index) {
+          return index + 1 + ". " + item.name;
+        }).join("  ") : "Swipe a few cards to build a ranking.";
+        tagsEl.textContent = "Result ready";
+        return;
+      }
+      const item = deck[current];
+      nameEl.textContent = item.name;
+      textEl.textContent = item.text;
+      tagsEl.textContent = item.tags.join(" / ");
+    }
+
+    function finishGame(title) {
+      finished = true;
+      shareText = resultLine();
+      resultTitleEl.textContent = title || "Ranked picks";
+      resultTextEl.textContent = shareText;
+      copyFallbackEl.hidden = true;
+      copyFallbackEl.value = shareText;
+      resultEl.hidden = false;
+      statusEl.textContent = "Result ready.";
+      render();
+      parent.postMessage({type:"cartridge-result", text: shareText}, "*");
+    }
+
+    function swipe(likes) {
+      if (finished || current >= deck.length) return getState();
+      const item = deck[current];
+      const weight = likes ? 0.5 : -0.35;
+      item.tags.forEach(function(tag) {
+        tagScores[tag] = (tagScores[tag] || 0) + weight;
+      });
+      history.push({ id: item.id, liked: Boolean(likes) });
+      if (likes) liked.push(item);
+      current += 1;
+      statusEl.textContent = likes ? "Liked." : "Passed.";
+      if (current >= deck.length) finishGame("Ranked picks");
+      else render();
+      return getState();
+    }
+
+    function copyResult() {
+      const text = shareText || resultLine();
+      function fallback() {
+        copyFallbackEl.hidden = false;
+        copyFallbackEl.value = text;
+        copyFallbackEl.focus();
+        copyFallbackEl.select();
+      }
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(text).then(function() {
+          statusEl.textContent = "Copied.";
+        }, fallback);
+      } else {
+        fallback();
+      }
+    }
+
+    function setState(nextState) {
+      deck = resolvedDeck(nextState.deck || defaultDeck);
+      current = nextState.current || 0;
+      history = (nextState.history || []).map(function(item) {
+        return { id: item.id, liked: Boolean(item.liked) };
+      });
+      liked = (nextState.liked || []).map(function(item) {
+        const found = deck.find(function(deckItem) {
+          return deckItem.id === item.id;
+        });
+        return found || item;
+      });
+      tagScores = Object.assign({}, nextState.tagScores || {});
+      finished = Boolean(nextState.finished);
+      shareText = "";
+      resultEl.hidden = true;
+      copyFallbackEl.hidden = true;
+      statusEl.textContent = "Ready.";
+      render();
+    }
+
+    function getState() {
+      return {
+        deck: cloneDeck(deck),
+        current: current,
+        history: history.slice(),
+        liked: cloneDeck(liked),
+        ranking: cloneDeck(ranking()),
+        tagScores: Object.assign({}, tagScores),
+        finished: finished,
+      };
+    }
+
+    cardEl.addEventListener("pointerdown", function(event) {
+      if (event.cancelable) event.preventDefault();
+      startX = event.clientX;
+      startY = event.clientY;
+      activePointerId = event.pointerId;
+      cardEl.style.transition = "none";
+      cardEl.setPointerCapture(event.pointerId);
+    }, { passive: false });
+
+    cardEl.addEventListener("pointermove", function(event) {
+      if (activePointerId !== event.pointerId) return;
+      if (event.cancelable) event.preventDefault();
+      previewDrag(event.clientX - startX);
+    }, { passive: false });
+
+    cardEl.addEventListener("pointerup", function(event) {
+      if (activePointerId !== event.pointerId) return;
+      if (event.cancelable) event.preventDefault();
+      const dx = event.clientX - startX;
+      const dy = event.clientY - startY;
+      activePointerId = null;
+      cardEl.style.transition = "";
+      resetCardTransform();
+      if (Math.abs(dx) < 36 || Math.abs(dx) <= Math.abs(dy)) return;
+      swipe(dx > 0);
+    }, { passive: false });
+
+    cardEl.addEventListener("pointercancel", function(event) {
+      if (activePointerId !== event.pointerId) return;
+      activePointerId = null;
+      cardEl.style.transition = "";
+      resetCardTransform();
+    });
+
+    document.getElementById("pass").addEventListener("click", function() {
+      swipe(false);
+    });
+    document.getElementById("like").addEventListener("click", function() {
+      swipe(true);
+    });
+    document.getElementById("finish").addEventListener("click", function() {
+      finishGame("Ranked picks");
+    });
+    document.getElementById("copyResult").addEventListener("click", copyResult);
+    document.getElementById("resultNewGame").addEventListener("click", function() {
+      setState({ deck: defaultDeck });
+    });
+
+    window.__cartridgeSwipeDeck = {
+      setState: setState,
+      getState: getState,
+      loadDeck: loadDeck,
+      swipe: swipe,
+      finishGame: finishGame,
+    };
+
+    loadDeck(customDeckFromPage());
+  </script>
+</body>
+</html>
