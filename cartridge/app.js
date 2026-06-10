@@ -131,7 +131,7 @@ function decodePayload(raw) {
     try {
       const decoded = atob(value.replace(/\s+/g, ""));
       if (decoded.trim().startsWith("<")) return decoded;
-    } catch {
+    } catch (error) {
       return value;
     }
   }
@@ -140,9 +140,9 @@ function decodePayload(raw) {
 
 function titleFromPayload(payload) {
   const match = payload.match(/<title>(.*?)<\/title>/i);
-  if (match?.[1]?.trim()) return match[1].trim().slice(0, 80);
+  if (match && match[1] && match[1].trim()) return match[1].trim().slice(0, 80);
   const heading = payload.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (heading?.[1]?.trim())
+  if (heading && heading[1] && heading[1].trim())
     return heading[1]
       .replace(/<[^>]+>/g, "")
       .trim()
@@ -247,7 +247,7 @@ async function loadHashPayload() {
     const payload = decodeURIComponent(encoded);
     input.value = payload;
     runPayload(payload);
-  } catch {
+  } catch (error) {
     toast("Could not read cartridge from URL.");
   }
 }
@@ -263,7 +263,7 @@ async function registerServiceWorker() {
     await navigator.serviceWorker.ready;
     status.textContent = navigator.onLine ? "offline ready" : "offline";
     status.className = "status ready";
-  } catch {
+  } catch (error) {
     status.textContent = "cache unavailable";
     status.className = "status warn";
   }
@@ -283,14 +283,14 @@ document.querySelector("#clearButton").addEventListener("click", async () => {
   toast("Shelf cleared.");
 });
 fileInput.addEventListener("change", async () => {
-  const file = fileInput.files?.[0];
+  const file = fileInput.files && fileInput.files[0];
   if (!file) return;
   const payload = await file.text();
   input.value = payload;
   runPayload(payload, file.name.replace(/\.[^.]+$/, ""));
 });
 window.addEventListener("message", (event) => {
-  if (event.data?.type === "cartridge-result") {
+  if (event.data && event.data.type === "cartridge-result") {
     toast(String(event.data.text || "Result received."));
   }
 });
@@ -303,6 +303,10 @@ window.addEventListener("offline", () => {
   status.className = "status ready";
 });
 
-await registerServiceWorker();
-await renderShelf();
-await loadHashPayload();
+async function start() {
+  await registerServiceWorker();
+  await renderShelf();
+  await loadHashPayload();
+}
+
+start();

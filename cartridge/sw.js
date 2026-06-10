@@ -1,4 +1,4 @@
-const CACHE_NAME = "cartridge-player-v1";
+const CACHE_NAME = "cartridge-player-v2";
 const CORE_ASSETS = ["./", "./index.html", "./styles.css", "./app.js", "./manifest.webmanifest", "./icon.svg"];
 
 self.addEventListener("install", (event) => {
