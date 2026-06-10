@@ -127,11 +127,15 @@ function decodePayload(raw) {
     const comma = value.indexOf(",");
     return comma > -1 ? decodeURIComponent(value.slice(comma + 1)) : value;
   }
-  if (/^[A-Za-z0-9+/=\s]+$/.test(value) && value.length % 4 === 0 && !value.includes("<")) {
+  if (
+    /^[A-Za-z0-9+/=\s]+$/.test(value) &&
+    value.length % 4 === 0 &&
+    !value.includes("<")
+  ) {
     try {
       const decoded = atob(value.replace(/\s+/g, ""));
       if (decoded.trim().startsWith("<")) return decoded;
-    } catch {
+    } catch (error) {
       return value;
     }
   }
@@ -140,9 +144,13 @@ function decodePayload(raw) {
 
 function titleFromPayload(payload) {
   const match = payload.match(/<title>(.*?)<\/title>/i);
-  if (match?.[1]?.trim()) return match[1].trim().slice(0, 80);
+  if (match && match[1] && match[1].trim()) return match[1].trim().slice(0, 80);
   const heading = payload.match(/<h1[^>]*>(.*?)<\/h1>/i);
-  if (heading?.[1]?.trim()) return heading[1].replace(/<[^>]+>/g, "").trim().slice(0, 80);
+  if (heading && heading[1] && heading[1].trim())
+    return heading[1]
+      .replace(/<[^>]+>/g, "")
+      .trim()
+      .slice(0, 80);
   return `Cartridge ${new Date().toLocaleString()}`;
 }
 
@@ -170,14 +178,16 @@ async function saveActive() {
     id: crypto.randomUUID(),
     title,
     payload,
-    savedAt: Date.now()
+    savedAt: Date.now(),
   });
   await renderShelf();
   toast("Saved locally.");
 }
 
 async function renderShelf() {
-  const records = (await getAllCartridges()).sort((a, b) => b.savedAt - a.savedAt);
+  const records = (await getAllCartridges()).sort(
+    (a, b) => b.savedAt - a.savedAt,
+  );
   shelf.replaceChildren();
   if (!records.length) {
     const empty = document.createElement("div");
@@ -202,7 +212,9 @@ async function renderShelf() {
     const run = document.createElement("button");
     run.type = "button";
     run.textContent = "Run";
-    run.addEventListener("click", () => runPayload(record.payload, record.title));
+    run.addEventListener("click", () =>
+      runPayload(record.payload, record.title),
+    );
 
     item.append(copy, run);
     shelf.append(item);
@@ -243,7 +255,7 @@ async function loadHashPayload() {
     const payload = decodeURIComponent(encoded);
     input.value = payload;
     runPayload(payload);
-  } catch {
+  } catch (error) {
     toast("Could not read cartridge from URL.");
   }
 }
@@ -259,34 +271,38 @@ async function registerServiceWorker() {
     await navigator.serviceWorker.ready;
     status.textContent = navigator.onLine ? "offline ready" : "offline";
     status.className = "status ready";
-  } catch {
+  } catch (error) {
     status.textContent = "cache unavailable";
     status.className = "status warn";
   }
 }
 
-document.querySelector("#runButton").addEventListener("click", () => runPayload(input.value));
+document
+  .querySelector("#runButton")
+  .addEventListener("click", () => runPayload(input.value));
 document.querySelector("#saveButton").addEventListener("click", saveActive);
 document.querySelector("#sampleButton").addEventListener("click", () => {
   input.value = sampleCartridge;
   runPayload(sampleCartridge, "Sample cartridge");
 });
 document.querySelector("#copyButton").addEventListener("click", copyActive);
-document.querySelector("#downloadButton").addEventListener("click", downloadActive);
+document
+  .querySelector("#downloadButton")
+  .addEventListener("click", downloadActive);
 document.querySelector("#clearButton").addEventListener("click", async () => {
   await clearCartridges();
   await renderShelf();
   toast("Shelf cleared.");
 });
 fileInput.addEventListener("change", async () => {
-  const file = fileInput.files?.[0];
+  const file = fileInput.files && fileInput.files[0];
   if (!file) return;
   const payload = await file.text();
   input.value = payload;
   runPayload(payload, file.name.replace(/\.[^.]+$/, ""));
 });
 window.addEventListener("message", (event) => {
-  if (event.data?.type === "cartridge-result") {
+  if (event.data && event.data.type === "cartridge-result") {
     toast(String(event.data.text || "Result received."));
   }
 });
@@ -299,6 +315,10 @@ window.addEventListener("offline", () => {
   status.className = "status ready";
 });
 
-await registerServiceWorker();
-await renderShelf();
-await loadHashPayload();
+async function start() {
+  await registerServiceWorker();
+  await renderShelf();
+  await loadHashPayload();
+}
+
+start();
