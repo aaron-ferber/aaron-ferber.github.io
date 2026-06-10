@@ -398,7 +398,7 @@ function loadGallery() {
         adoptedOrder: saved.adoptedOrder,
       };
     }
-  } catch {
+  } catch (error) {
     localStorage.removeItem(STORAGE_KEY);
   }
 

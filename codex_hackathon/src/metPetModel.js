@@ -100,7 +100,7 @@ export function extractObjectId(input) {
   let parsed;
   try {
     parsed = new URL(trimmed);
-  } catch {
+  } catch (error) {
     return null;
   }
 
@@ -131,7 +131,7 @@ export function extractSearchQuery(input) {
     if (hashQuery) return decodeURIComponent(hashQuery[1].replace(/\+/g, ' ')).trim();
 
     return '';
-  } catch {
+  } catch (error) {
     return trimmed;
   }
 }
