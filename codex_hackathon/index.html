@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Metagotchi Gallery</title>
+    <link rel="stylesheet" href="./src/styles.css" />
+  </head>
+  <body>
+    <main class="app-shell" id="app" data-empty="true">
+      <section class="play-panel" aria-labelledby="app-title">
+        <header class="masthead">
+          <div>
+            <p class="eyebrow">The Met collection pet lab</p>
+            <h1 id="app-title">Metagotchi Gallery</h1>
+          </div>
+          <a class="pages-link" href="https://aaron-ferber.github.io/codex_hackathon/">/codex_hackathon</a>
+        </header>
+
+        <div class="pet-device" id="pet-device" data-mood="steady" data-pattern="brush">
+          <div class="device-top" aria-hidden="true">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+
+          <div class="lcd-screen" aria-live="polite">
+            <div class="screen-status">
+              <span id="pet-name">Awaiting hatch</span>
+              <span id="pet-mood">Dormant</span>
+            </div>
+
+            <div class="pet-stage">
+              <div class="wall-glow" aria-hidden="true"></div>
+              <div class="pedestal" aria-hidden="true"></div>
+              <div class="met-pet" aria-label="Metagotchi pet">
+                <div class="pet-ear pet-ear-left"></div>
+                <div class="pet-ear pet-ear-right"></div>
+                <div class="pet-body">
+                  <img id="pet-art" alt="" hidden />
+                  <div class="pet-face" aria-hidden="true">
+                    <span class="eye eye-left"></span>
+                    <span class="eye eye-right"></span>
+                    <span class="mouth"></span>
+                  </div>
+                </div>
+                <div class="pet-feet" aria-hidden="true">
+                  <span></span>
+                  <span></span>
+                </div>
+              </div>
+            </div>
+
+            <p class="pet-message" id="pet-message">The gallery shelf is empty.</p>
+          </div>
+
+          <div class="device-controls" id="care-buttons" aria-label="Care actions"></div>
+        </div>
+      </section>
+
+      <section class="control-panel" aria-label="Met object controls">
+        <form class="hatch-card" id="hatch-form">
+          <label for="hatch-input">Met link or object ID</label>
+          <div class="hatch-row">
+            <input
+              id="hatch-input"
+              name="hatch"
+              type="text"
+              autocomplete="off"
+              placeholder="metmuseum.org/art/collection/search/436535"
+            />
+            <button type="submit" id="hatch-button">Hatch</button>
+          </div>
+          <p class="status-message" id="status-message" data-tone="neutral">
+            Paste a Met object page, API URL, object ID, or search phrase.
+          </p>
+        </form>
+
+        <div class="sample-row" id="sample-row" aria-label="Quick hatch samples"></div>
+
+        <div class="candidate-list" id="candidate-list" aria-label="Search results"></div>
+
+        <article class="art-card">
+          <div>
+            <p class="eyebrow">Source work</p>
+            <h2 id="art-title">No artwork selected</h2>
+            <p id="art-meta" class="art-meta"></p>
+          </div>
+          <div class="tag-row" id="art-tags"></div>
+          <p id="pet-lore" class="pet-lore">Choose a Met object to wake the first pet.</p>
+          <a id="met-link" class="met-link" target="_blank" rel="noreferrer">The Met</a>
+        </article>
+
+        <div class="meter-list" id="meter-list" aria-label="Pet care meters"></div>
+      </section>
+
+      <section class="gallery-panel" aria-label="Adopted Metagotchi gallery">
+        <div class="gallery-heading">
+          <p class="eyebrow">Adopted shelf</p>
+          <h2>Gallery</h2>
+        </div>
+        <div class="gallery-strip" id="gallery"></div>
+      </section>
+    </main>
+
+    <script type="module" src="./src/app.js"></script>
+  </body>
+</html>
